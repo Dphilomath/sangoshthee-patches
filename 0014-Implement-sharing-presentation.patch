@@ -1,0 +1,739 @@
+From 712adc377cff0ba868c47c7a4a5a7eb76ba291ae Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Sun, 25 Jul 2021 12:02:53 +0530
+Subject: [PATCH 14/18] Implement sharing presentation
+
+pass in props to ParticipantView.native.js via LargeVideo.native.js
+---
+ android/app/build.gradle                      |   1 +
+ .../java/org/jitsi/meet/MainActivity.java     |  12 +-
+ android/settings.gradle                       |   2 +
+ ios/app/app.xcodeproj/project.pbxproj         |  38 ++++
+ .../components/ParticipantView.native.js      |  13 +-
+ .../components/LargeVideo.native.js           |   7 +-
+ react/features/share-ppt/actions.any.js       |  30 ++--
+ .../share-ppt/components/native/PPTDialog.js  | 169 ++++++++++++------
+ .../components/native/SharedPPTDialog.js      |   2 +-
+ react/features/share-ppt/middleware.any.js    |  75 ++++----
+ react/features/share-ppt/reducer.native.js    |   4 +-
+ 11 files changed, 234 insertions(+), 119 deletions(-)
+
+diff --git a/android/app/build.gradle b/android/app/build.gradle
+index 69665aaa0..a0d72da81 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -75,6 +75,7 @@ android {
+ }
+ 
+ dependencies {
++    implementation project(':react-native-webview')
+     implementation fileTree(dir: 'libs', include: ['*.jar'])
+     implementation 'androidx.appcompat:appcompat:1.2.0'
+ 
+diff --git a/android/app/src/main/java/org/jitsi/meet/MainActivity.java b/android/app/src/main/java/org/jitsi/meet/MainActivity.java
+index 09844bcd1..d70013c42 100644
+--- a/android/app/src/main/java/org/jitsi/meet/MainActivity.java
++++ b/android/app/src/main/java/org/jitsi/meet/MainActivity.java
+@@ -233,12 +233,12 @@ public class MainActivity extends JitsiMeetActivity {
+         }
+     }
+ 
+-    protected List<ReactPackage> getPackages() {
+-        return Arrays.<ReactPackage>asList(
+-            new MainReactPackage(),
+-            new FilePickerPackage() // Add package
+-        );
+-    }
++    // protected List<ReactPackage> getPackages() {
++    //     return Arrays.<ReactPackage>asList(
++    //         new MainReactPackage(),
++    //         new FilePickerPackage() // Add package
++    //     );
++    // }
+ 
+     // Helper methods
+     //
+diff --git a/android/settings.gradle b/android/settings.gradle
+index 84c6be3e5..a40dfcb12 100644
+--- a/android/settings.gradle
++++ b/android/settings.gradle
+@@ -1,4 +1,6 @@
+ rootProject.name = 'jitsi-meet'
++include ':react-native-webview'
++project(':react-native-webview').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-webview/android')
+ 
+ include ':app', ':sdk'
+ include ':react-native-async-storage'
+diff --git a/ios/app/app.xcodeproj/project.pbxproj b/ios/app/app.xcodeproj/project.pbxproj
+index c0d5d9be2..377aae4ad 100644
+--- a/ios/app/app.xcodeproj/project.pbxproj
++++ b/ios/app/app.xcodeproj/project.pbxproj
+@@ -38,6 +38,7 @@
+ 		DEA9F28A258A6EA800D4CD74 /* JitsiMeetSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DEA9F288258A6EA800D4CD74 /* JitsiMeetSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+ 		E588011722789D43008B0561 /* JitsiMeetContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = E58801132278944E008B0561 /* JitsiMeetContext.swift */; };
+ 		E5C97B63227A1EB400199214 /* JitsiMeetCommands.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5C97B62227A1EB400199214 /* JitsiMeetCommands.swift */; };
++		CA22015B83274417B0A7E818 /* libRNCWebView.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B08C8208755B44288A593799 /* libRNCWebView.a */; };
+ /* End PBXBuildFile section */
+ 
+ /* Begin PBXContainerItemProxy section */
+@@ -162,6 +163,8 @@
+ 		E58801132278944E008B0561 /* JitsiMeetContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JitsiMeetContext.swift; sourceTree = "<group>"; };
+ 		E5C97B62227A1EB400199214 /* JitsiMeetCommands.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JitsiMeetCommands.swift; sourceTree = "<group>"; };
+ 		FC040BBED70876444D89E91C /* Pods-JitsiMeet.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-JitsiMeet.release.xcconfig"; path = "../Pods/Target Support Files/Pods-JitsiMeet/Pods-JitsiMeet.release.xcconfig"; sourceTree = "<group>"; };
++		C27943C631724E1FBC61E38B /* RNCWebView.xcodeproj */ = {isa = PBXFileReference; name = "RNCWebView.xcodeproj"; path = "../../node_modules/react-native-webview/ios/RNCWebView.xcodeproj"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = wrapper.pb-project; explicitFileType = undefined; includeInIndex = 0; };
++		B08C8208755B44288A593799 /* libRNCWebView.a */ = {isa = PBXFileReference; name = "libRNCWebView.a"; path = "libRNCWebView.a"; sourceTree = "<group>"; fileEncoding = undefined; lastKnownFileType = archive.ar; explicitFileType = undefined; includeInIndex = 0; };
+ /* End PBXFileReference section */
+ 
+ /* Begin PBXFrameworksBuildPhase section */
+@@ -179,6 +182,7 @@
+ 				DE050389256E904600DEE3A5 /* WebRTC.xcframework in Frameworks */,
+ 				DEA9F289258A6EA800D4CD74 /* JitsiMeetSDK.framework in Frameworks */,
+ 				55BEDABDA92D47D399A70A5E /* libPods-JitsiMeet.a in Frameworks */,
++				CA22015B83274417B0A7E818 /* libRNCWebView.a in Frameworks */,
+ 			);
+ 			runOnlyForDeploymentPostprocessing = 0;
+ 		};
+@@ -302,6 +306,7 @@
+ 				0BEA5C261F7B8F73000D0AB4 /* Watch app */,
+ 				0BEA5C351F7B8F73000D0AB4 /* WatchKit extension */,
+ 				4EB06025260E026600F524C5 /* JitsiMeetBroadcast Extension */,
++				00F010BEDF214E9CBFD48317 /* Libraries */,
+ 			);
+ 			indentWidth = 2;
+ 			sourceTree = "<group>";
+@@ -318,6 +323,15 @@
+ 			name = Products;
+ 			sourceTree = "<group>";
+ 		};
++		00F010BEDF214E9CBFD48317 /* Libraries */ = {
++			isa = "PBXGroup";
++			children = (
++				C27943C631724E1FBC61E38B /* RNCWebView.xcodeproj */,
++			);
++			name = Libraries;
++			sourceTree = "<group>";
++			path = "";
++		};
+ /* End PBXGroup section */
+ 
+ /* Begin PBXNativeTarget section */
+@@ -710,6 +724,10 @@
+ 				SWIFT_VERSION = 5.0;
+ 				TARGETED_DEVICE_FAMILY = 4;
+ 				WATCHOS_DEPLOYMENT_TARGET = 4.0;
++				LIBRARY_SEARCH_PATHS = (
++					"$(inherited)",
++					"\"$(SRCROOT)/$(TARGET_NAME)\"",
++				);
+ 			};
+ 			name = Debug;
+ 		};
+@@ -745,6 +763,10 @@
+ 				SWIFT_VERSION = 5.0;
+ 				TARGETED_DEVICE_FAMILY = 4;
+ 				WATCHOS_DEPLOYMENT_TARGET = 4.0;
++				LIBRARY_SEARCH_PATHS = (
++					"$(inherited)",
++					"\"$(SRCROOT)/$(TARGET_NAME)\"",
++				);
+ 			};
+ 			name = Release;
+ 		};
+@@ -850,6 +872,10 @@
+ 				PRODUCT_BUNDLE_IDENTIFIER = org.jitsi.meet;
+ 				PRODUCT_NAME = "jitsi-meet";
+ 				PROVISIONING_PROFILE_SPECIFIER = "";
++				HEADER_SEARCH_PATHS = (
++					"$(inherited)",
++					"$(SRCROOT)/../../node_modules/react-native-webview/apple/**",
++				);
+ 			};
+ 			name = Debug;
+ 		};
+@@ -879,6 +905,10 @@
+ 				PRODUCT_BUNDLE_IDENTIFIER = org.jitsi.meet;
+ 				PRODUCT_NAME = "jitsi-meet";
+ 				PROVISIONING_PROFILE_SPECIFIER = "";
++				HEADER_SEARCH_PATHS = (
++					"$(inherited)",
++					"$(SRCROOT)/../../node_modules/react-native-webview/apple/**",
++				);
+ 			};
+ 			name = Release;
+ 		};
+@@ -914,6 +944,10 @@
+ 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+ 				SWIFT_VERSION = 5.0;
+ 				TARGETED_DEVICE_FAMILY = "1,2";
++				LIBRARY_SEARCH_PATHS = (
++					"$(inherited)",
++					"\"$(SRCROOT)/$(TARGET_NAME)\"",
++				);
+ 			};
+ 			name = Debug;
+ 		};
+@@ -948,6 +982,10 @@
+ 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+ 				SWIFT_VERSION = 5.0;
+ 				TARGETED_DEVICE_FAMILY = "1,2";
++				LIBRARY_SEARCH_PATHS = (
++					"$(inherited)",
++					"\"$(SRCROOT)/$(TARGET_NAME)\"",
++				);
+ 			};
+ 			name = Release;
+ 		};
+diff --git a/react/features/base/participants/components/ParticipantView.native.js b/react/features/base/participants/components/ParticipantView.native.js
+index 3c930abee..d790801e2 100644
+--- a/react/features/base/participants/components/ParticipantView.native.js
++++ b/react/features/base/participants/components/ParticipantView.native.js
+@@ -2,6 +2,7 @@
+ 
+ import React, { Component } from 'react';
+ import { Text, View } from 'react-native';
++import PPTDialog from '../../../share-ppt/components/native/PPTDialog';
+ 
+ import { YoutubeLargeVideo } from '../../../shared-video/components';
+ import { Avatar } from '../../avatar';
+@@ -194,7 +195,8 @@ class ParticipantView extends Component<Props> {
+             _videoTrack: videoTrack,
+             disableVideo,
+             onPress,
+-            tintStyle
++            tintStyle,
++            participantId
+         } = this.props;
+ 
+         // If the connection has problems, we will "tint" the video / avatar.
+@@ -208,7 +210,10 @@ class ParticipantView extends Component<Props> {
+                 ? this.props.testHintId
+                 : `org.jitsi.meet.Participant#${this.props.participantId}`;
+ 
+-        const renderYoutubeLargeVideo = _isFakeParticipant && !disableVideo;
++        
++        const pptParticipantRE = /.*sangoshthee.cdac.in.*/
++        const renderPresentation = _isFakeParticipant && pptParticipantRE.test(participantId)
++        const renderYoutubeLargeVideo = _isFakeParticipant && !disableVideo && !renderPresentation;
+ 
+         return (
+             <Container
+@@ -226,6 +231,8 @@ class ParticipantView extends Component<Props> {
+ 
+                 { renderYoutubeLargeVideo && <YoutubeLargeVideo youtubeId = { this.props.participantId } /> }
+ 
++                { renderPresentation && <PPTDialog url = { this.props.url } /> }
++
+                 { !_isFakeParticipant && renderVideo
+                     && <VideoTrack
+                         onPress = { onPress }
+@@ -234,7 +241,7 @@ class ParticipantView extends Component<Props> {
+                         zOrder = { this.props.zOrder }
+                         zoomEnabled = { this.props.zoomEnabled } /> }
+ 
+-                { !renderYoutubeLargeVideo && !renderVideo
++                { !renderYoutubeLargeVideo && !renderVideo && !renderPresentation
+                     && <View style = { styles.avatarContainer }>
+                         <Avatar
+                             participantId = { this.props.participantId }
+diff --git a/react/features/large-video/components/LargeVideo.native.js b/react/features/large-video/components/LargeVideo.native.js
+index 38b51bf78..325fd7d0a 100644
+--- a/react/features/large-video/components/LargeVideo.native.js
++++ b/react/features/large-video/components/LargeVideo.native.js
+@@ -134,7 +134,8 @@ class LargeVideo extends PureComponent<Props, State> {
+                 testHintId = 'org.jitsi.meet.LargeVideo'
+                 useConnectivityInfoLabel = { useConnectivityInfoLabel }
+                 zOrder = { 0 }
+-                zoomEnabled = { true } />
++                zoomEnabled = { true }
++                url = {this.props.url} />
+         );
+     }
+ }
+@@ -150,6 +151,7 @@ function _mapStateToProps(state) {
+     const { participantId } = state['features/large-video'];
+     const participant = getParticipantById(state, participantId);
+     const { clientHeight: height, clientWidth: width } = state['features/base/responsive-ui'];
++    const { url: stateUrl } = state['features/shared-ppt']
+     let disableVideo = false;
+ 
+     if (participant?.local) {
+@@ -161,7 +163,8 @@ function _mapStateToProps(state) {
+         _height: height,
+         _participantId: participantId,
+         _styles: ColorSchemeRegistry.get(state, 'LargeVideo'),
+-        _width: width
++        _width: width,
++        url: stateUrl
+     };
+ }
+ 
+diff --git a/react/features/share-ppt/actions.any.js b/react/features/share-ppt/actions.any.js
+index 52b50e0f4..b119a275d 100644
+--- a/react/features/share-ppt/actions.any.js
++++ b/react/features/share-ppt/actions.any.js
+@@ -1,4 +1,4 @@
+-import { getCurrentConference } from '../base/conference';
++import { getCurrentConference, getConferenceState } from '../base/conference';
+ import { openDialog } from '../base/dialog/actions';
+ import { getLocalParticipant } from '../base/participants';
+ import { SharedPPTDialog, PPTDialog } from './components';
+@@ -24,22 +24,20 @@ export function resetSharedPPTStatus() {
+  * @param {{
+  *     ownerId: string,
+  *     status: boolean,
+- *     time: number
+  * }} options - The options.
+  *
+  * @returns {{
+  *     type: SET_SHARED_PPT_STATUS,
+  *     ownerId: string,
+  *     status: boolean,
+- *     time: number
+  * }}
+  */
+-export function setSharedPPTStatus({ status, time, ownerId }) {
++ export function setSharedPPTStatus({ url, status, ownerId }) {
+     return {
+         type: SET_SHARED_PPT_STATUS,
+         ownerId,
+         status,
+-        time
++        url
+     };
+ }
+ 
+@@ -79,11 +77,21 @@ export function stopSharedPPT() {
+  *
+  * @returns {Function}
+  */
+-export function playSharedPPT() {
++ export function playSharedPPT()     {
+     return (dispatch, getState) => {
+-        const {status: uploaded = false} = getState()['features/presentation']
+-        dispatch(openDialog(PPTDialog, { uploaded }))
+-    }
++        const conference = getCurrentConference(getState());
++        const url = 'https://sangoshthee.cdac.in/presentation/?meetingId=' + getConferenceState(getState()).room;
++
++        if (conference) {
++            const localParticipant = getLocalParticipant(getState());
++
++            dispatch(setSharedPPTStatus({
++                url,
++                status: 'start',
++                ownerId: localParticipant.id
++            }));
++        }
++    };
+ }
+ 
+ /**
+@@ -96,10 +104,10 @@ export function toggleSharedPresentation() {
+     return (dispatch, getState) => {
+         const state = getState();
+         const { status } = state['features/shared-ppt'];
+-        if (status === true ) {
++        if (status === 'start' ) {
+             dispatch(stopSharedPPT());
+         } else {
+-            dispatch(showSharedPPTDialog(( ) => dispatch(playSharedPPT())));
++            dispatch(showSharedPPTDialog(() => dispatch(playSharedPPT())));
+         }
+     };
+ }
+diff --git a/react/features/share-ppt/components/native/PPTDialog.js b/react/features/share-ppt/components/native/PPTDialog.js
+index 42ce94ee0..ee030ed8d 100644
+--- a/react/features/share-ppt/components/native/PPTDialog.js
++++ b/react/features/share-ppt/components/native/PPTDialog.js
+@@ -1,68 +1,133 @@
+-// @flow
++// // @flow
+ 
+-import React, { Component } from 'react';
+-import { Dimensions } from "react-native";
++// import React, { Component } from 'react';
++// import { Dimensions } from "react-native";
++// import { WebView } from 'react-native-webview';
+ 
+-import type { Dispatch } from 'redux';
+-import { View, Text, PixelRatio, StyleSheet, TouchableOpacity } from 'react-native';
++// import type { Dispatch } from 'redux';
++// import { View, Text, PixelRatio, StyleSheet, TouchableOpacity } from 'react-native';
+ 
+-import { CustomDialog } from '../../../base/dialog';
++import { CustomDialog, BaseDialog, DialogContainer } from '../../../base/dialog';
+ import { connect } from '../../../base/redux';
+ 
+-import AbstractSharedPPTDialog from '../AbstractSharedPPTDialog';
++// import AbstractSharedPPTDialog from '../AbstractSharedPPTDialog';
+ 
+-/**
+- * Implements a component to render a display name prompt.
+- */
+-class PPTDialog extends Component {
++// /**
++//  * Implements a component to render a display name prompt.
++//  */
+ 
+-    constructor(props: Props) {
+-        super(props);
+-        // console.log(this.props)
++// class PPTDialog extends Component<Props, State> {
+ 
+-    }
++//     constructor(props: Props) {
++//         super(props);
++//         // console.log(this.props)
++
++//     }
+ 
+     
+-    /**
+-     * Implements React's {@link Component#render()}.
+-     *
+-     * @inheritdoc
+-     */
+-    render() {  
+-        return (
+-          <CustomDialog 
+-            style = {{...this.props.style, ...styles.pptDialog }}
+-            cancelKey = 'dialog.Cancel'>
+-            <View style={styles.container}>
+-                {this._renderContent()}
+-            </View>
+-        </CustomDialog>
+-
+-        );
+-    }
+-    _renderContent(){
+-        if(!this.props.uploaded) return <Text>No presentation uploaded</Text>
+-        else return <View></View>
++//     /**
++//      * Implements React's {@link Component#render()}.
++//      *
++//      * @inheritdoc
++//      */
++//     render() {  
++//         return (
++//             <DialogContainer>
++//                  <CustomDialog 
++//                     style = {{...this.props.style, ...styles.pptDialog }}
++//                     cancelKey = 'dialog.Cancel'>
++                    
++//                     {/* <View style={styles.container}> */}
++//                     <WebView
++//                         source={{
++//                             uri: 'https://github.com/react-native-webview/react-native-webview'
++//                         }}/>
++//                     {/* </View> */}
++//                 </CustomDialog>
++//             </DialogContainer>
++         
++//         );
++//     }
++// }
++// var width = Dimensions.get('window').width; //full width
++// var height = Dimensions.get('window').height; //full height
++
++
++// const styles = StyleSheet.create({
++//     pptDialog: {
++//         // flex:1,
++//         // alignItems:"center",
++//         // justifyContent:"center",
++//         // width:width,
++//         // height:height/1.8
++        
++//     },
++//     container:{
++//         flex:1,
++//         alignItems:"center",
++//         justifyContent:"center"
++//     }
++// })
++
++
++// export default connect()(PPTDialog);
++
++
++import React from 'react';
++import { View, Button, Modal, StyleSheet, ActivityIndicator } from 'react-native';
++import { WebView } from 'react-native-webview';
++
++class PPTDialog extends React.Component {
++    constructor(props) {
++        super(props)
++        this.state = {
++            showModal : true
++        }
+     }
+-}
+-var width = Dimensions.get('window').width; //full width
+-var height = Dimensions.get('window').height; //full height
+ 
+ 
++
++    ActivityIndicatorLoadingView() {
++       return (
++         <ActivityIndicator
++            color="#009688"
++            size="large"
++            style={styles.ActivityIndicatorStyle}
++         /> 
++       );
++    }
++
++    render(){
++        console.log(this.props.url)
++        return(
++                    // <Modal animationType="slide" transparent={true}  visible={this.state.showModal} onRequestClose={() => this.setState({showModal: false}) }>
++                        <View style={styles.modal}>
++                            <View style={styles.modalContainer}>
++                                <WebView 
++                                    style={{ flex : 1 }} 
++                                    source={{uri: this.props.url}}
++                                    renderLoading={this.ActivityIndicatorLoadingView}/>
++                            </View>
++                        </View>
++                    // </Modal>
++        )
++    }
++}
+ const styles = StyleSheet.create({
+-    pptDialog: {
+-        flex:1,
+-        alignItems:"center",
+-        justifyContent:"center",
+-        width:width,
+-        height:height/1.8
++    modal : {
++        flex : 1,
++        justifyContent : 'center',
++        alignItems : 'center',
++        backgroundColor: 'rgba(0,0,0,0.5)'
++    },
++    modalContainer : {
++        backgroundColor : 'white',
++        width : '100%',   // </View>
++        height : '40%',
++    },
++    ActivityIndicatorStyle: {
++        flex: 1,
++        justifyContent: 'center',
+     },
+-    container:{
+-        flex:1,
+-        alignItems:"center",
+-        justifyContent:"center"
+-    }
+ })
+-
+-
+-export default connect()(PPTDialog);
++export default connect()(PPTDialog);
+\ No newline at end of file
+diff --git a/react/features/share-ppt/components/native/SharedPPTDialog.js b/react/features/share-ppt/components/native/SharedPPTDialog.js
+index 14216e01b..cebc40a22 100644
+--- a/react/features/share-ppt/components/native/SharedPPTDialog.js
++++ b/react/features/share-ppt/components/native/SharedPPTDialog.js
+@@ -42,7 +42,7 @@ class SharedPPTDialog extends AbstractSharedPPTDialog<*> {
+             const { onPostSubmit } = this.props;
+             onPostSubmit && onPostSubmit();
+             
+-            return false;
++            return true;
+         }
+ }
+ 
+diff --git a/react/features/share-ppt/middleware.any.js b/react/features/share-ppt/middleware.any.js
+index d4bc4fa20..9803872b7 100644
+--- a/react/features/share-ppt/middleware.any.js
++++ b/react/features/share-ppt/middleware.any.js
+@@ -18,7 +18,7 @@ import {
+     setSharedPPTStatus
+ } from './actions.any';
+ import { SHARED_PPT, PPT_PARTICIPANT_NAME } from './constants';
+-import { isSharingStatus } from './functions';
++
+ 
+ /**
+  * Middleware that captures actions related to video sharing and updates
+@@ -32,8 +32,8 @@ MiddlewareRegistry.register(store => next => action => {
+     const state = getState();
+     const conference = getCurrentConference(state);
+     const localParticipantId = getLocalParticipant(state)?.id;
+-    const { videoUrl, status, ownerId, time, muted, volume } = action;
+-    const { ownerId: stateOwnerId } = state['features/shared-video'];
++    const { url, status, ownerId } = action;
++    const { ownerId: stateOwnerId, url: stateUrl} = state['features/shared-ppt'];
+ 
+     switch (action.type) {
+     case CONFERENCE_LEFT:
+@@ -49,27 +49,21 @@ MiddlewareRegistry.register(store => next => action => {
+         break;
+     case SET_SHARED_PPT_STATUS:
+         if (localParticipantId === ownerId) {
+-            sendShareVideoCommand({
++            sendSharePPTCommand({
+                 conference,
+                 localParticipantId,
+-                muted,
+                 status,
+-                time,
+-                id: videoUrl,
+-                volume
++                id: url
+             });
+         }
+         break;
+     case RESET_SHARED_PPT_STATUS:
+         if (localParticipantId === stateOwnerId) {
+-            sendShareVideoCommand({
++            sendSharePPTCommand({
+                 conference,
+-                id: statevideoUrl,
+                 localParticipantId,
+-                muted: true,
+                 status: 'stop',
+-                time: 0,
+-                volume: 0
++                id: stateUrl
+             });
+         }
+         break;
+@@ -87,7 +81,7 @@ StateListenerRegistry.register(
+     state => getCurrentConference(state),
+     (conference, store, previousConference) => {
+         if (conference && conference !== previousConference) {
+-            conference.addCommandListener(SHARED_VIDEO,
++            conference.addCommandListener(SHARED_PPT,
+                 ({ value, attributes }) => {
+ 
+                     const { dispatch, getState } = store;
+@@ -95,12 +89,14 @@ StateListenerRegistry.register(
+                     const localParticipantId = getLocalParticipant(getState()).id;
+                     const status = attributes.state;
+ 
+-                    if (isSharingStatus(status)) {
+-                        handleSharingVideoStatus(store, value, attributes, conference);
++                    if (status ===  'start') {
++                        console.log(value)
++                        handleSharingPPTStatus(store, value, attributes, conference);
+                     } else if (status === 'stop') {
++                        console.log(value)
+                         dispatch(participantLeft(value, conference));
+                         if (localParticipantId !== from) {
+-                            dispatch(resetSharedVideoStatus());
++                            dispatch(resetSharedPPTStatus());
+                         }
+                     }
+                 }
+@@ -115,38 +111,35 @@ StateListenerRegistry.register(
+  * Sets the SharedVideoStatus if the event was triggered by the local user.
+  *
+  * @param {Store} store - The redux store.
+- * @param {string} videoUrl - The id of the video to the shared.
+- * @param {Object} attributes - The attributes received from the share video command.
++ * @param {string} url - The id of the ppt to the shared.
++ * @param {Object} attributes - The attributes received from the share ppt command.
+  * @param {JitsiConference} conference - The current conference.
+  * @returns {void}
+  */
+-function handleSharingVideoStatus(store, videoUrl, { state, time, from, muted }, conference) {
++function handleSharingPPTStatus(store, url, { state, from }, conference) {
+     const { dispatch, getState } = store;
+     const localParticipantId = getLocalParticipant(getState()).id;
+-    const oldStatus = getState()['features/shared-video']?.status;
+-
+-    if (state === 'start' || ![ 'playing', 'pause', 'start' ].includes(oldStatus)) {
+-        const youtubeId = videoUrl.match(/http/) ? false : videoUrl;
+-        const avatarURL = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/0.jpg` : '';
++    const oldStatus = getState()['features/shared-ppt']?.status;
++    console.log("reached handleSharing")
++    if (state === 'start' ) {
++        const avatarURL = null
+ 
+         dispatch(participantJoined({
+             conference,
+-            id: videoUrl,
++            id: url,
+             isFakeParticipant: true,
+-            avatarURL,
+-            name: VIDEO_PLAYER_PARTICIPANT_NAME
++            // avatarURL,
++            name: PPT_PARTICIPANT_NAME
+         }));
+ 
+-        dispatch(pinParticipant(videoUrl));
++        dispatch(pinParticipant(url));
+     }
+ 
+     if (localParticipantId !== from) {
+-        dispatch(setSharedVideoStatus({
+-            muted: muted === 'true',
++        dispatch(setSharedPPTStatus({
+             ownerId: from,
+             status: state,
+-            time: Number(time),
+-            videoUrl
++            url
+         }));
+     }
+ }
+@@ -154,24 +147,22 @@ function handleSharingVideoStatus(store, videoUrl, { state, time, from, muted },
+ /* eslint-disable max-params */
+ 
+ /**
+- * Sends SHARED_VIDEO command.
++ * Sends SHARED_PPT command.
+  *
+  * @param {string} id - The id of the video.
+- * @param {string} status - The status of the shared video.
++ * @param {string} status - The status of the shared ppt.
+  * @param {JitsiConference} conference - The current conference.
+  * @param {string} localParticipantId - The id of the local participant.
+- * @param {string} time - The seek position of the video.
+  * @returns {void}
+  */
+-function sendShareVideoCommand({ id, status, conference, localParticipantId, time, muted, volume }) {
+-    conference.sendCommandOnce(SHARED_VIDEO, {
++function sendSharePPTCommand({ id, status, conference, localParticipantId }) {
++    console.log("inside sendSharedPPTcommand")
++    
++    conference.sendCommandOnce(SHARED_PPT, {
+         value: id,
+         attributes: {
+             from: localParticipantId,
+-            muted,
+-            state: status,
+-            time,
+-            volume
++            state: status
+         }
+     });
+ }
+diff --git a/react/features/share-ppt/reducer.native.js b/react/features/share-ppt/reducer.native.js
+index 3dfe9772a..50e16f07c 100644
+--- a/react/features/share-ppt/reducer.native.js
++++ b/react/features/share-ppt/reducer.native.js
+@@ -10,7 +10,7 @@ const initialState = {};
+  * Reduces the Redux actions of the feature features/shared-ppt.
+  */
+ ReducerRegistry.register('features/shared-ppt', (state = initialState, action) => {
+-    const { status, time, ownerId } = action;
++    const { status, url, ownerId } = action;
+ 
+     switch (action.type) {
+     case RESET_SHARED_PPT_STATUS:
+@@ -20,7 +20,7 @@ ReducerRegistry.register('features/shared-ppt', (state = initialState, action) =
+             ...state,
+             ownerId,
+             status,
+-            time
++            url
+         };
+     default:
+         return state;
+-- 
+2.25.1
+

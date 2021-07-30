@@ -1,0 +1,162 @@
+From d5d8d832edd2225f657827856ae40cd8479b6247 Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Wed, 7 Jul 2021 12:17:00 +0530
+Subject: [PATCH 05/18] uploadPPT opens a dialogue
+
+---
+ react/features/presentation/actions.any.js    |  8 +++---
+ .../AbstractSharedPPTDialog.js}               |  4 +--
+ .../features/presentation/components/index.js |  2 +-
+ .../components/native/SharedPPTDialog.js      | 26 ++++++++++---------
+ .../native/UploadPresentationButton.js        |  7 +++--
+ 5 files changed, 24 insertions(+), 23 deletions(-)
+ rename react/features/presentation/{AbstractSharedVideoDialog.js => components/AbstractSharedPPTDialog.js} (87%)
+
+diff --git a/react/features/presentation/actions.any.js b/react/features/presentation/actions.any.js
+index 1af7ca15d..ca424fb1f 100644
+--- a/react/features/presentation/actions.any.js
++++ b/react/features/presentation/actions.any.js
+@@ -49,13 +49,13 @@ export function setSharedPPTStatus({ status, time, ownerId }) {
+  * @param {Function} onPostSubmit - The function to be invoked when a valid link is entered.
+  * @returns {Function}
+  */
+-export function showSharedPPTDialog(onPostSubmit) {
+-    return openDialog(SharedPPTDialog, { onPostSubmit });
++export function showSharedPPTDialog() {
++    return openDialog(SharedPPTDialog);
+ }
+ 
+ /**
+  *
+- * Stops playing a shared video.
++ * Stops playing a shared PPT.
+  *
+  * @returns {Function}
+  */
+@@ -109,7 +109,7 @@ export function toggleSharedPresentation() {
+         if (status === true ) {
+             dispatch(stopSharedPPT());
+         } else {
+-            dispatch(showSharedPPTDialog(() => dispatch(playSharedPPT())));
++            dispatch(showSharedPPTDialog());
+         }
+     };
+ }
+diff --git a/react/features/presentation/AbstractSharedVideoDialog.js b/react/features/presentation/components/AbstractSharedPPTDialog.js
+similarity index 87%
+rename from react/features/presentation/AbstractSharedVideoDialog.js
+rename to react/features/presentation/components/AbstractSharedPPTDialog.js
+index 31006ee40..7d88e0e4c 100644
+--- a/react/features/presentation/AbstractSharedVideoDialog.js
++++ b/react/features/presentation/components/AbstractSharedPPTDialog.js
+@@ -5,7 +5,7 @@ import type { Dispatch } from 'redux';
+ 
+ /**
+  * The type of the React {@code Component} props of
+- * {@link AbstractSharedVideoDialog}.
++ * {@link AbstractSharedPPTDialog}.
+  */
+ export type Props = {
+ 
+@@ -26,7 +26,7 @@ export type Props = {
+ };
+ 
+ /**
+- * Implements an abstract class for {@code SharedVideoDialog}.
++ * Implements an abstract class for {@code SharedPPTDialog}.
+  */
+ export default class AbstractSharedVideoDialog<S: *> extends Component < Props, S > {
+ 
+diff --git a/react/features/presentation/components/index.js b/react/features/presentation/components/index.js
+index 0b96f973d..cda61441e 100644
+--- a/react/features/presentation/components/index.js
++++ b/react/features/presentation/components/index.js
+@@ -1 +1 @@
+-export { default as UploadPresentationButton } from './native/UploadPresentationButton';
+\ No newline at end of file
++export * from './_';
+diff --git a/react/features/presentation/components/native/SharedPPTDialog.js b/react/features/presentation/components/native/SharedPPTDialog.js
+index 4b3a40a7b..4282bc3eb 100644
+--- a/react/features/presentation/components/native/SharedPPTDialog.js
++++ b/react/features/presentation/components/native/SharedPPTDialog.js
+@@ -1,17 +1,17 @@
+ // @flow
+ 
+-import React, { Component } from 'react';
++import React from 'react';
++import { View, Text, TextInput } from 'react-native';
+ 
+-import { InputDialog } from '../../../base/dialog';
++import { InputDialog, AlertDialog, CustomSubmitDialog} from '../../../base/dialog';
+ import { connect } from '../../../base/redux';
+-import { defaultMobileSharedVideoLink } from '../../constants';
+ 
+-import AbstractSharedVideoDialog from '../AbstractSharedVideoDialog';
++import AbstractSharedPPTDialog from '../AbstractSharedPPTDialog';
+ 
+ /**
+  * Implements a component to render a display name prompt.
+  */
+-class SharedPPTDialog extends AbstractSharedVideoDialog<*> {
++class SharedPPTDialog extends AbstractSharedPPTDialog<*> {
+ 
+     /**
+      * Implements React's {@link Component#render()}.
+@@ -20,13 +20,15 @@ class SharedPPTDialog extends AbstractSharedVideoDialog<*> {
+      */
+     render() {
+         return (
+-            <InputDialog
+-                contentKey = 'dialog.shareVideoTitle'
+-                // onSubmit = { this._onSetVideoLink }
+-                // textInputProps = {{
+-                //     placeholder: defaultMobileSharedVideoLink
+-                // }} 
+-                />
++            <CustomSubmitDialog
++                onCancel = { this._onCancel }
++                onSubmit = { this._onLogin }>
++            <View>
++                <Text>Upload a presentation</Text>
++            </View>
++            <TextInput style={{borderColor:"red"}}/>
++                
++            </CustomSubmitDialog>
+         );
+     }
+ }
+diff --git a/react/features/presentation/components/native/UploadPresentationButton.js b/react/features/presentation/components/native/UploadPresentationButton.js
+index 7ee5aa7c4..b6998d323 100644
+--- a/react/features/presentation/components/native/UploadPresentationButton.js
++++ b/react/features/presentation/components/native/UploadPresentationButton.js
+@@ -9,6 +9,7 @@ import { getLocalParticipant } from '../../../base/participants';
+ import { AbstractButton, type AbstractButtonProps } from '../../../base/toolbox/components';
+ import { toggleSharedPresentation } from '../../actions.native';
+ import { getFeatureFlag, UPLOAD_PPT_ENABLED } from '../../../base/flags';
++import { Alert } from 'react-native';
+ 
+ 
+ 
+@@ -54,7 +55,7 @@ class UploadPresentationButton extends AbstractButton<Props, *> {
+      * @returns {void}
+      */
+     _handleClick() {
+-        this._doToggleUploadPresentation
++        this._doToggleUploadPresentation()
+     }
+ 
+ 
+@@ -103,9 +104,7 @@ class UploadPresentationButton extends AbstractButton<Props, *> {
+  * @returns {Props}
+  */
+  function _mapStateToProps(state, ownProps): Object {
+-
+-    //not able to access state here
+-    const { ownerId=1, status: sharedPPTStatus } = state['features/presentation'];
++    const { ownerId, status: sharedPPTStatus } = state['features/presentation'];
+     const localParticipantId = getLocalParticipant(state).id;
+     const enabled = getFeatureFlag(state, UPLOAD_PPT_ENABLED, true);
+     const { visible = enabled } = ownProps;
+-- 
+2.25.1
+

@@ -1,0 +1,1271 @@
+From a6569e76ca40143a32bf4063926f3955a204b3af Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Fri, 16 Jul 2021 23:20:54 +0530
+Subject: [PATCH 11/18] connect app to upload ppt to API
+
+modify notification icons
+---
+ .../res/drawable-hdpi/ic_notification.png     | Bin 659 -> 2185 bytes
+ .../res/drawable-mdpi/ic_notification.png     | Bin 379 -> 1215 bytes
+ .../res/drawable-xhdpi/ic_notification.png    | Bin 960 -> 3239 bytes
+ .../res/drawable-xxhdpi/ic_notification.png   | Bin 1655 -> 5476 bytes
+ .../res/drawable-xxxhdpi/ic_notification.png  | Bin 2423 -> 7054 bytes
+ react/features/app/middlewares.native.js      |   1 +
+ react/features/upload-ppt/actionTypes.js      |   8 +-
+ react/features/upload-ppt/actions.any.js      | 106 ++++-----------
+ ...PTDialog.js => AbstractUploadPPTDialog.js} |   4 +-
+ .../components/native/SharedPPTDialog.js      | 111 ----------------
+ .../components/native/UploadPPTDialog.js      | 125 ++++++++++++++++++
+ .../native/UploadPresentationButton.js        |  19 +--
+ .../upload-ppt/components/native/index.js     |   2 +-
+ .../upload-ppt/components/native/styles.js    |  37 ++++++
+ react/features/upload-ppt/middleware.any.js   |  73 ++++++++++
+ .../features/upload-ppt/middleware.native.js  |   1 +
+ react/features/upload-ppt/reducer.native.js   |  15 ++-
+ 17 files changed, 287 insertions(+), 215 deletions(-)
+ rename react/features/upload-ppt/components/{AbstractSharedPPTDialog.js => AbstractUploadPPTDialog.js} (81%)
+ delete mode 100644 react/features/upload-ppt/components/native/SharedPPTDialog.js
+ create mode 100644 react/features/upload-ppt/components/native/UploadPPTDialog.js
+ create mode 100644 react/features/upload-ppt/components/native/styles.js
+ create mode 100644 react/features/upload-ppt/middleware.any.js
+ create mode 100644 react/features/upload-ppt/middleware.native.js
+
+diff --git a/android/app/src/main/res/drawable-hdpi/ic_notification.png b/android/app/src/main/res/drawable-hdpi/ic_notification.png
+index b3e86fe68a0f89594f6f78f48573ec99c73a9401..a4150f76e2e76c8406f2350c01e233997d7ec1e4 100644
+GIT binary patch
+literal 2185
+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
+LNkvXXu0mjfN){}J
+
+literal 659
+zcmV;E0&M+>P)<h;3K|Lk000e1NJLTq001Na001Ni1^@s6;Q*MJ00077Nkl<Zc-rmQ
+zYiP}J9LMpqA|<JLK%z~pHp${-=9VbRWs25Z77Ifu_Zm7ynN4{j%~o1uWFeHa4GYUW
+zQA_0Vz*eqBnp@g9VfuT2^Lg;^w1@xS|NI}EU%eju|8@F(`u)DY%m2h;nU-l0Yo6x~
+z!EJm;NfZK2RG7_pfvj`~nu#|Uie40_GfW=tq6wpL3478JWDKq&iId2|6usLPc9<+Y
+zz<JEZ8LY$%^kYKUf#UdtCHRf2n1oWi551`Auo5@00^3#8-L~Yt|IKP@R+zP8Q*;3}
+z3ebh67^ab`(l$`!GRSZhuNCoq?8F8IN@{eDYs8M?pcS~wB5p;8Mqm}{kiZ%&!bAMU
+zR{T(%eQ_0NK0aW&iq_wr<EQU=zou)l1#}fCp^dN3*YOk8(pfz7y|?LX##HpV3}l@*
+z;E_gZJl5kHj-ecPFo2DihaOjfmTPLPb~-g})^QK^;->ba1K6!?V26bbI><u2Qn7j}
+z-VW7Mo5E~Dg|>hbn5(V97QwC{!{n<tt+QOz;x!6&pxX0GU+vg*?ZZ2rX|~eF1{vry
+z>aiB9QKmwTD_Cl?(YcHTxMjZ$db-|Xj;5?a&+F82YWu89nuWcB#~2ZGpaFH@X%$&r
+zv=0)-f)?YVeq%>Uwu_bZM^}qqSf(Xjgd;lL&tZ#3#tQf;M!P(_KH7<`rEDR-;j3z^
+zN@rDzcIifpbbYFKs-SbVVhS(~hjlSKr2{r6tZPQKI<^!2UKBoU@^l@w@2x{o`2cLx
+tN?IJ1K;tw@*|DfJtD(%F1(_E0_74&n866Nr9;pBT002ovPDHLkV1jBbJ6Zq$
+
+diff --git a/android/app/src/main/res/drawable-mdpi/ic_notification.png b/android/app/src/main/res/drawable-mdpi/ic_notification.png
+index d6787b1db85798a70a7ffdc8d412f26ecd4c8932..ee3c9632c8ef00a34b856f5fa90b9118e105da31 100644
+GIT binary patch
+literal 1215
+zcmV;w1VH<VP)<h;3K|Lk000e1NJLTq000vJ000vR1^@s6a!@wR000DrNkl<ZI8R+v
+zYitx%7(I6$yR*C9F5BIuk6l>WQefM(OS^?qUZqG35fYL3Lmr8#ML`jTfH5YeG$4so
+zB<c?$kD?MD8fzq}#6+qDQBWwYDFjp~uM`AYx^0(jcV_n9Yi5>Kagr}Hb8o(LzjMFy
+z9fE%!0RS_8t-er!IBwR9JUcWmQk+qc6Qt=-1_lQccdp*(Y&-e)*((PJfA6{aICV6S
+zJh6~j;&A58ZIA+GFY}CaSL3oUmQ@5{l|@jNMBi`>SNg8u`<vhO|Ipg9zq_Tq;eIFL
+z08Bsw%>1wg!v6HiO~-_>&hnl#0d)%t>6Ur<#{Nif0IA>*Pu*`t)5V?VPi|>@uKVo6
+zI|fb)%$?^9ENJ+N`qD~<bL_h0P^5D;6(s1in%Sa2%=ZWl$|x5FG5J@tQ~scHL+4i;
+zJLX0&L}TW@cj0@V*s`Xq9-3g$htm}~;B}zwg$SIo_ymZmQ(V5)hti3@RFRzM?E^o`
+z^+(q2IllJt8e-3{j(BITJFD4}qFU%9)G85@X2JPq!^n49%^agHLI`>X5(w9Rj=3d%
+zG}O$(<Z*73_U=F4VvTEeR}kN#UHfh6{@O&gjjEH}qF|E{l?due$75S48#?EZ42qAz
+zrms1K8{K{IdD5_U=~TSAw4C0f9pXFR)EprGm0w;HG(ArZx-cB_5GW#;B7s{)w9J@@
+z`56wVjKL}hW@Xb>AHqO90nR!4yQ8S8D&o!CtFh~1?RDZ`aYPq%E@@c~3`H`*6%nw>
+z&?Es4yNu?kLCkmA!8y<~n83_e52Nc&9~?FdmMtj6`sd3K8lQokZLjGhu>7deYH(RV
+zY>pqyt$<rZK#`!z0whI3V{RtaWx5a>R1sX+gm9i0+iGWHc5%+A<UelT#7SWJVI4$}
+zh{lj8aARnCmMH>e6+jdTR2HCeV2Q_x#()R+yLwR>4nQOTWz4)wLlQgAy{?nMiZ8mr
+zS+1!f%E?gaSR{&lrj)rMLrE}o_DG}1k|ngv$Va)&f+S<+IsxHvEr$AEU%Eju7k_lX
+zGA6r*GfEA863URsAA>}p7c@gL=^NUX2thoi!bJ$$=7*5$u!1rQQ4r|GhZn?6&8t5p
+z_PnZTo;mB!a4jx?h~`lSWo{9W^w_}crZAv;6rjM3XiUYnl5waj@k3*jTLh6ewr^+e
+zzwu$EIRU<BcI>nHCaq#xTn7<l^AZfPCK=2&8gNMtEtG)=c`npU@L^ANfk9LM<zAb-
+zaqotGzis*XmDFsyid{L2H=h;>FXB`;08{0dN0HP}G7d=+aI?ULtxrwjn=5mZ9e1zG
+zbtiUSI@54;PXEpR!BN*xaw6kBRc{{?EpjQ-h71%6Vj6)NMn4h);m$}FKeeh-Jpboy
+zyxV%X<NCq9OQM(W-X3ucBQa%g-pNjH*@~_9%%WOO;N(edR7adKB-3OpstDrIy$7-5
+zr@w8Aw|`xa-rm@M{cI#*)G;kNktykupRTcH7gckPd@$-%H8lpB?0VFF>7;t=#AkST
+d^~(R9_8*tz%*MCnP~HFl002ovPDHLkV1jx5L&^XE
+
+literal 379
+zcmV->0fhdEP)<h;3K|Lk000e1NJLTq000;O000;W1^@s6;CDUv0003(Nkl<Zc-rmN
+zzbi&j9LMp8Q5dZ<kT9~MqzvrD6N?@q8F-{91Cjj5f*X-~N<HM)pgbfZgTKIFGBGKc
+z6vzAIQ}%PtojCPcZr$(a-0!{La}$aG6~{8h6yP3faRrni!U0M`7q7xTx-f>;kj2|^
+zjBzv|gUXNr7ns2gT5yBnkT3QequTipx)svsTYM5%7{)A~(Wh1o+9&fV-ic+b;0ZY_
+z;RBmEve$e9GHS~guCb0R-tmAD-+)K~TbR?Xb9$mf)H$_?n+o-{JYrr&Pt>jnJH_Zl
+zEw)_(><)WSgK0GBMSq%~wV;-*qTVIo5{sD9#O|5j^@?WAMC980GlkeAA%!>X{#Fxx
+zhkoR{2H2hts0FrIS_L<7ic;U<vH=y?MG@N2f$C64Ls~mc#&zb~&-4Z5asIiI$ot#>
+Z?{64(@fnJ(S(N|)002ovPDHLkV1hFCum%7C
+
+diff --git a/android/app/src/main/res/drawable-xhdpi/ic_notification.png b/android/app/src/main/res/drawable-xhdpi/ic_notification.png
+index c34043b86d15b871cb354c644996d280449b957f..7e0edefede82598dd0d2e35c656bdafb14f614c9 100644
+GIT binary patch
+literal 3239
+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
+Ze*rdYr_~}kvC{wm002ovPDHLkV1mFHKREyZ
+
+literal 960
+zcmV;x13&zUP)<h;3K|Lk000e1NJLTq001xm001xu1^@s6R|5Hm000ArNkl<Zc-rll
+zduWYu7{`y?ZxhXBl4NqrhPmHwi=~DkiAnyDWoqWKXl|S254Xr=LKun|VuU}ik^Dja
+zn~kt!nM>wwZhL*7eB^C4C3W8O<~;Rj=RG^8^L>8r^Lw7}?+paP5sq+#<G%{WaW;!j
+z;<||RoA~a|&)6^CiX6WsFn|PxijCsEXyT^?l1QM7h~@Qkzle_(cSM<}FPe%cVtc3y
+zA0keR&!SumV)dJeBC#)&#V-=y#eK0{v=?(kKhaKn73rZWz7OJeTe}ol;<=b6>Tp-y
+zh*qJRz*g}>L{aM&d7`f9D9&36g>w1aWR<6jYhtEoD2|I0V!o)NwAzGX0=8i{a0g7}
+z12J2i6YIoyaf{9U+O9)IcxRCzDj8O*o!{}$hM4QKjo8eW#RqG(UJ7qRc~r5gRzj&_
+zAn!T+oh9N)()P(2(OkUpY$oW3+loh`LZs2-Bg9B-!(3K5f&YIK$0#uei;*jey-L6~
+z>q{&`q9{P5L$6;#??2@#Cu^ajd7UCM&82!Fz8$5J#wPunn8A=+D3;pX@FIak#B`%w
+zy5li-=ZLt9`*erRh4o^dSZm$Liv*@1rUPcpVMv+hiD7l^5R*==C*y%E-m#%4ioKrf
+z0sUxy#F&tytY|zwXf=WpIDuIdlE@12h0jKF_ws`+zBOX(h`7n+_p67s$VuWL*Ppo~
+zmV96AwUt*^u!NhR+2QIm4lUFY%6EyrAeM>2l*w2&>pqc<C$c6mj_(W)Rswqvzlsvr
+z!d<w;L8S#rTIn1hIR|%oMYJTj=OmHGhOZqA@xLZ(1}kp;y_V=oeXr*;Wi^zOZQM@0
+z&ZGn_vBkk!ed`uaMLni#7S7U2qA}$Eq4(SOCx~5k7GMtC6%B%wz&##|^g_@IHn6$R
+zQ8>?<;u-EVij^;>ym|z)^Hg%{7a(dg&wF|^v}%fSPH9Q5&0ivV2D^1u;cc=JQG{`e
+zWDb0*Cj291V{Uaa*M-=K`d$pK4|Jd9_<P&PD=~0AxVG*yRgAC)SDX=YN&cdz53>-x
+z6JI|DtMIGuo4^}l8{Q^I+~)lXrgQCpmqGt7po26)*kQU)3O=Y5du<)&B<F#MP&qQL
+zp^h7IV7G|%)AP+ZL?>ejN&|iioMj0!;gBB_80Kn|sR2KRgr6mWIKL(k!@<06z^`FX
+ingihoM>xXqFYyBr!0ut(<8aFW0000<MNUMnLSTYiGScV(
+
+diff --git a/android/app/src/main/res/drawable-xxhdpi/ic_notification.png b/android/app/src/main/res/drawable-xxhdpi/ic_notification.png
+index b9b4f516d570425721e428e1dbc72358ba2195e9..f4ef78bc9587d7259ef52f30240a2f0805c671b8 100644
+GIT binary patch
+literal 5476
+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
+av-5vARdSgk70AK>0000<MNUMnLSTXv1HT*q
+
+literal 1655
+zcmV--28j8IP)<h;3K|Lk000e1NJLTq002k;002k`1^@s6RqeA!000I)Nkl<Zc-rln
+zX>3$g6vu}aDwIW`VyFrNMnD!ti=rZ6rQ#AoAt(e9`wcZDATB5fSo=XSkQ7aeVvT&j
+z1+9&enkb4G6}MuDTL=P*2!g={sv_WEpXb2u%Hi5-8#S3Xb5HV5=PvX5?muV0lSl*!
+z5+q2FAVGozNok3q=t9AVf~25Ma9&{L7&#{jzK@QVZv}aQoudSeg%l;}GQkeUrGcHJ
+z1dWG~EsSR}R-&>4K~XdnLOy1kCpgGlVIU}q?t_e4Ggr%8Wu}vJrr>MHSRiO6$Pr9q
+z?$b;qrmJAKpx#8SZs2UeaOU@A8ZmtZD+Py4NdH_gfc0WQXTcS$?a3r^rU-sD#AuY7
+zBWNe+C+MRNo4uv%c{5YUDH0s!&>I9-39<y81oH)(1??e8=XSIAwoD)=TXP%^{IcK#
+zLir-WUgl@ASDo}T&b&0s&IE!AIq(6T@a2N<jH#^`v@!c%VgA`n%X3yUuJgz_P0&_Q
+zB^V)?z?zbnl?ep7q^}JBq7kebP0D7^3id1(<QoE464|oSnV^jvcCz4P9Pwa51-?mr
+z)H?RerMhqMs{3~YJ<^q+og7jlR~Nx5kAP8v3j~jm1LX>?6qE>_6#T}%?P`wcLP|S)
+zNtG!)CqR-f8qz2EmAf-5`CA~^<)UCZ5Hqil23W+rn$P}5);_`1I#7aWxPMjfyhb>|
+zrAF&6igOvU(HvUqtfwhFhbVdMTi}tSrqf?A5TCRSf_}2eqDDc+<#8mZHw9<J!R}OT
+zFzcPrf?_i0dm-XMv}&|T8V?ZmH@I4jXUt&yLEOmE1Ha45f2EqlyjJB4wGl=$-pRuz
+zyyrkx($gv>@*X}nka-um{3vb&xt6KsH|J7HXhixwYFg^ho~=!+zd*0Z`JJ=$ri0JP
+zxDiyti!W#Vc=Yc@Bi~7a_ZashcTzbVH-f(5#m8d`$>_h48wIoY+#4Tu#QDd~|2R`R
+zM?-KU2W>zTG<scwsSLr-lwocSjeM`hn3*P+<Cy<4ZUnhLkNTgBJz}($8h~bLqWA#G
+z<0F(6qj1!^XSt_+_4u=o_&?KK*%4P08zVRsVt&xE*`vu`YeKs2d(mi(CYAT2C8~w*
+z8<NzlZsi%}%&mwUL9TyO#&|QKd^VN*4kFwk*2?iIg{Dq(?Tv{LS%zlbAvlHSzRtcm
+zaWb#=^p)+!-~47qsk;T;A<fECOlz1DW;D=c)<vmKOlP#fbp>s0HIneWy9r{FIP6j!
+zdKQj&i?^@Z>oSfsS$2n1FDbVELju?uXT6EcdJRe8Sjfxfz?Jx~ThN$6RPOm`jQ)^e
+z3jen<<*Rur?M=pClu)2vCs^y5NGtEVT6_)_EHO?!YUBzi8(&jT`fxsVoU7BOrZPc`
+z+-;}1=xb%xuQjH%in%Tvd~-AWQia!Ut>PK;%<XHtR3#_R_?l_VO*DtdGlXcKQ^R;k
+z3o_?P=0;W9CLJ;9UsC>#OkVCLUUDb?p%;X`#k#geml>k6A$4yv$=O4zbs;|P3?k%u
+z)<07}mC6KFyH*9`3dWA0btdT>Ky-Sp1==&6=j20dXXDrQr~Gdg`GJAT^&H;$nwMDr
+z0__?{M0%nH<ka%a0`A2o6a8EZr8o{rq4NV8zI&R(tz&&SCQ?X)thus==-AO~*E($+
+z9ha=R!Bp%cyo1bQPgi_Jb0kSr%%Rc0+N^2D{HR`2$En_O75iY*`i$r+4`feUv}nG$
+zrtzhos@<gt-A%hTNvhB$j!k)22VG)X8oMwzjcN~(0A6jP*dSUQB_xyTV{#0cGfb2_
+z=<2SxUg>Nz&GcTFToKN-+S8J?IP-4aGdfZ}EH*bF5n+93BF-WQc$>q_Kx1mW{7B1!
+zH@wbZ0~)fOJjZY1@1tnVO~hSHBYqj<J~&ucS1n?`fE$gbs(H<6UK8A`HC7^Bgo^vm
+zo)2@y%>ArYdLzA}o|x1a%(1`oL1`x(&Y9Bb%q?f`sYIp=?Fv_s&t`5r;~Nq|ju0}}
+z6s&!XU+EFpIo4|Z5mMZZ=Z?V4@g&{l_l^TA#}kz6UDezkSZTU>rZOxr@>hb|&>uRO
+z7FqEBM3VNS>jD#hpBI$`CV~VB5+q2FAVK0Oe*iUOrwj7lhOqzu002ovPDHLkV1gRu
+B92Ecn
+
+diff --git a/android/app/src/main/res/drawable-xxxhdpi/ic_notification.png b/android/app/src/main/res/drawable-xxxhdpi/ic_notification.png
+index 84bb3cb31f951252326dd59789d090bcebf7e588..242706f590c85946aa689b7195deaaba68253607 100644
+GIT binary patch
+literal 7054
+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
+
+literal 2423
+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
+
+diff --git a/react/features/app/middlewares.native.js b/react/features/app/middlewares.native.js
+index 7f149fd20..45e633253 100644
+--- a/react/features/app/middlewares.native.js
++++ b/react/features/app/middlewares.native.js
+@@ -14,5 +14,6 @@ import '../mobile/wake-lock/middleware';
+ import '../mobile/watchos/middleware';
+ import '../share-room/middleware';
+ import '../shared-video/middleware';
++import '../upload-ppt/middleware'
+ 
+ import './middlewares.any';
+diff --git a/react/features/upload-ppt/actionTypes.js b/react/features/upload-ppt/actionTypes.js
+index d7379ac17..fa842bf00 100644
+--- a/react/features/upload-ppt/actionTypes.js
++++ b/react/features/upload-ppt/actionTypes.js
+@@ -5,11 +5,11 @@
+  * shared PPT.
+  *
+  * {
+- *     type: SET_SHARED_PPT_STATUS,
++ *     type: SET_UPLOAD_PPT_STATUS,
+  *     status: string
+  * }
+  */
+-export const SET_SHARED_PPT_STATUS = 'SET_SHARED_PPT_STATUS';
++export const SET_UPLOAD_PPT_STATUS = 'SET_UPLOAD_PPT_STATUS';
+ 
+ /**
+  * The type of the action which signals to reset the current known state of the
+@@ -19,7 +19,7 @@ export const SET_SHARED_PPT_STATUS = 'SET_SHARED_PPT_STATUS';
+  *     type: RESET_SHARED_PPT_STATUS,
+  * }
+  */
+-export const RESET_SHARED_PPT_STATUS = 'RESET_SHARED_PPT_STATUS';
++export const RESET_UPLOAD_PPT_STATUS = 'RESET_SHARED_PPT_STATUS';
+ 
+ /**
+  * The type of the action which signals to disable or enable the shared PPT
+@@ -30,3 +30,5 @@ export const RESET_SHARED_PPT_STATUS = 'RESET_SHARED_PPT_STATUS';
+  * }
+  */
+ export const SET_DISABLE_BUTTON = 'SET_DISABLE_BUTTON';
++
++export const RETRY_UPLOAD = 'RETRY_UPLOAD'
+diff --git a/react/features/upload-ppt/actions.any.js b/react/features/upload-ppt/actions.any.js
+index a9b888287..746e02304 100644
+--- a/react/features/upload-ppt/actions.any.js
++++ b/react/features/upload-ppt/actions.any.js
+@@ -1,115 +1,63 @@
+ import { getCurrentConference } from '../base/conference';
+ import { openDialog } from '../base/dialog/actions';
+ import { getLocalParticipant } from '../base/participants';
+-import { SharedPPTDialog } from './components';
++import { UploadPPTDialog } from './components';
+ 
+-import { RESET_SHARED_PPT_STATUS, SET_SHARED_PPT_STATUS } from './actionTypes';
++import { RESET_UPLOAD_PPT_STATUS, SET_UPLOAD_PPT_STATUS, RETRY_UPLOAD } from './actionTypes';
+ 
+ /**
+- * Resets the status of the shared PPT.
++ * Resets the status of the upload PPT.
+  *
+  * @returns {{
+- *     type: SET_SHARED_PPT_STATUS,
++ *     type: RESET_UPLOAD_PPT_STATUS,
+  * }}
+  */
+-export function resetSharedPPTStatus() {
++export function resetUploadPPTStatus() {
+     return {
+-        type: RESET_SHARED_PPT_STATUS
++        type: RESET_UPLOAD_PPT_STATUS
+     };
+ }
+ 
+-/**
+- * Updates the current known status of the shared video.
+- *
+- * @param {{
+- *     ownerId: string,
+- *     status: boolean,
+- *     time: number
+- * }} options - The options.
+- *
+- * @returns {{
+- *     type: SET_SHARED_PPT_STATUS,
+- *     ownerId: string,
+- *     status: boolean,
+- *     time: number
+- * }}
+- */
+-export function setSharedPPTStatus({ status, time, ownerId }) {
+-    return {
+-        type: SET_SHARED_PPT_STATUS,
+-        ownerId,
+-        status,
+-        time
+-    };
+-}
+-
+-/**
+- * Displays the dialog for uploading presentation.
+- *
+- * @param {Function} onPostSubmit - The function to be invoked when a valid link is entered.
+- * @returns {Function}
+- */
+-export function showSharedPPTDialog() {
+-    return openDialog(SharedPPTDialog);
+-}
+-
+-/**
+- *
+- * Stops playing a shared PPT.
+- *
+- * @returns {Function}
+- */
+-export function stopSharedPPT() {
++export function setUploadPPTStatus(file) {
+     return (dispatch, getState) => {
+-        const state = getState();
+-        const { ownerId } = state['features/upload-ppt'];
+-        const localParticipant = getLocalParticipant(state);
++    
++        const conference = getCurrentConference(getState());
+ 
+-        if (ownerId === localParticipant.id) {
+-            dispatch(resetSharedPPTStatus());
++        if (conference) {
++            const localParticipant = getLocalParticipant(getState());
++            dispatch({
++                type: SET_UPLOAD_PPT_STATUS,
++                file,
++                ownerId: localParticipant.id
++            });
+         }
+     };
+ }
++export function retryUpload(){
++    return {
++        type: RETRY_UPLOAD
++    }
++}
+ 
+ /**
+- *
+- * Plays a shared video.
+- *
+- * @param {string} videoUrl - The video url to be played.
++ * Displays the dialog for uploading presentation.
+  *
+  * @returns {Function}
+  */
+-export function playSharedPPT() {
+-    return (dispatch, getState) => {
+-        const conference = getCurrentConference(getState());
+-
+-        if (conference) {
+-            const localParticipant = getLocalParticipant(getState());
+-
+-            dispatch(setSharedPPTStatus({
+-                status: true,
+-                time: 0,
+-                ownerId: localParticipant.id
+-            }));
+-        }
+-    };
++export function showUploadPPTDialog(onPostSubmit) {
++    return openDialog(UploadPPTDialog, { onPostSubmit });
+ }
+ 
+ /**
+  *
+- * Stops the presentation.
++ * Toggles the upload presentation button.
+  *
+  * @returns {Function}
+  */
+-export function toggleSharedPresentation() {
++export function toggleUploadPresentation() {
+     return (dispatch, getState) => {
+         const state = getState();
+         const { status } = state['features/upload-ppt'];
+-
+-        if (status === true ) {
+-            dispatch(stopSharedPPT());
+-        } else {
+-            dispatch(showSharedPPTDialog());
+-        }
++            dispatch(showUploadPPTDialog( file => dispatch(setUploadPPTStatus(file))));
+     };
+ }
+diff --git a/react/features/upload-ppt/components/AbstractSharedPPTDialog.js b/react/features/upload-ppt/components/AbstractUploadPPTDialog.js
+similarity index 81%
+rename from react/features/upload-ppt/components/AbstractSharedPPTDialog.js
+rename to react/features/upload-ppt/components/AbstractUploadPPTDialog.js
+index 7d88e0e4c..c93b7a8f6 100644
+--- a/react/features/upload-ppt/components/AbstractSharedPPTDialog.js
++++ b/react/features/upload-ppt/components/AbstractUploadPPTDialog.js
+@@ -26,9 +26,9 @@ export type Props = {
+ };
+ 
+ /**
+- * Implements an abstract class for {@code SharedPPTDialog}.
++ * Implements an abstract class for {@code UploadPPTDialog}.
+  */
+-export default class AbstractSharedVideoDialog<S: *> extends Component < Props, S > {
++export default class AbstractUploadPPTDialog<S: *> extends Component < Props, S > {
+ 
+     /**
+      * Instantiates a new component.
+diff --git a/react/features/upload-ppt/components/native/SharedPPTDialog.js b/react/features/upload-ppt/components/native/SharedPPTDialog.js
+deleted file mode 100644
+index f01d88bb9..000000000
+--- a/react/features/upload-ppt/components/native/SharedPPTDialog.js
++++ /dev/null
+@@ -1,111 +0,0 @@
+-// @flow
+-
+-import React from 'react';
+-import { View, Text, PixelRatio, StyleSheet, TouchableOpacity } from 'react-native';
+-
+-import { InputDialog, AlertDialog, CustomSubmitDialog} from '../../../base/dialog';
+-import { connect } from '../../../base/redux';
+-
+-import AbstractSharedPPTDialog from '../AbstractSharedPPTDialog';
+-
+-import FilePickerManager from 'react-native-file-picker';
+-
+-/**
+- * Implements a component to render a display name prompt.
+- */
+-class SharedPPTDialog extends AbstractSharedPPTDialog<*> {
+-
+-    state = {
+-        file: {}
+-    };
+-
+-    getFilename(){
+-      const {fileName="No file chosen"}=this.state.file
+-      return fileName
+-    }
+-
+-    selectFileTapped() {
+-        const options = {
+-          title: 'File Picker',
+-          chooseFileButtonTitle: 'Choose File...'
+-        };
+-    
+-        FilePickerManager.showFilePicker(options, (response) => {
+-          console.log('Response = ', response);
+-    
+-          if (response.didCancel) {
+-            console.log('User cancelled photo picker');
+-          }
+-          else if (response.error) {
+-            console.log('ImagePickerManager Error: ', response.error);
+-          }
+-          else if (response.customButton) {
+-            console.log('User tapped custom button: ', response.customButton);
+-          }
+-          else {
+-            this.setState({
+-              file: response
+-            });
+-          }
+-        });
+-      }
+-
+-    /**
+-     * Implements React's {@link Component#render()}.
+-     *
+-     * @inheritdoc
+-     */
+-    render() {
+-        return (
+-            <CustomSubmitDialog
+-                okKey="Submit"
+-                onCancel = { this._onCancel }
+-                onSubmit = { this._onLogin }>
+-                <View style={styles.container}>
+-                  <Text style={styles.title}>Upload a presentation</Text>
+-                  <View style={styles.upload} >
+-                    <Text style={styles.fileInfo}>{this.getFilename()}</Text>
+-                    <TouchableOpacity style={styles.button} onPress={this.selectFileTapped.bind(this)}>
+-                        <Text>Choose file...</Text>
+-                    </TouchableOpacity>
+-                  </View>   
+-                </View>  
+-            </CustomSubmitDialog>
+-        );
+-    }
+-}
+-const styles = StyleSheet.create({
+-    container: {
+-      // flex: 1,
+-      justifyContent: 'center',
+-      alignItems: 'center',
+-      // backgroundColor: '#F5FCFF',
+-      height:100
+-    },
+-    button: {
+-      borderColor: '#9B9B9B',
+-      borderWidth: 1 / PixelRatio.get(),
+-      justifyContent:"center",
+-      alignItems:"center",
+-      margin: 5,
+-      padding: 5
+-    },
+-    fileInfo: {
+-      borderColor: '#9B9B9B',
+-      borderWidth: 1 / PixelRatio.get(),
+-      margin: 5,
+-      padding: 5,
+-      width:"70%"
+-    },
+-    upload:{
+-      flexDirection:"row"
+-    },
+-    title:{
+-      fontWeight:"bold",
+-      fontSize:17,
+-      paddingBottom:10
+-    }
+-  });
+-
+-
+-export default connect()(SharedPPTDialog);
+diff --git a/react/features/upload-ppt/components/native/UploadPPTDialog.js b/react/features/upload-ppt/components/native/UploadPPTDialog.js
+new file mode 100644
+index 000000000..deda098ec
+--- /dev/null
++++ b/react/features/upload-ppt/components/native/UploadPPTDialog.js
+@@ -0,0 +1,125 @@
++// @flow
++
++import React from 'react';
++import { View, Text, TouchableOpacity } from 'react-native';
++
++import { CustomSubmitDialog} from '../../../base/dialog';
++import { connect } from '../../../base/redux';
++import styles from './styles'
++import AbstractUploadPPTDialog from '../AbstractUploadPPTDialog';
++
++import FilePickerManager from 'react-native-file-picker';
++
++/**
++ * Implements a component to render ppt upload dialog
++ */
++class UploadPPTDialog extends AbstractUploadPPTDialog<*> {
++  
++    state = {
++        file: {}
++    };
++
++    getFilename(){
++      const {fileName="No file chosen"}=this.state.file
++      return fileName
++    }
++
++
++    selectFileTapped() {
++        const options = {
++          title: 'File Picker',
++          chooseFileButtonTitle: 'Choose File...'
++        };
++    
++        FilePickerManager.showFilePicker(options, (response) => {
++          console.log('Response = ', response);
++
++          if (response.didCancel) {
++            console.log('User cancelled file picker');
++          }
++          else if (response.error) {
++            console.log('FilePickerManager Error: ', response.error);
++          }
++          else if (response.customButton) {
++            console.log('User tapped custom button: ', response.customButton);
++          }
++          else {
++            this.setState({
++              file: response
++            });
++          }
++        });
++      }
++
++    //validate whether the file is a .ppt or .pptx type
++    _validated = ()=>{
++      let re =  /.*\.pptx?$/
++      return re.test(this.getFilename())
++    }
++
++    _invalidFile = () =>{
++      if(Object.keys(this.state.file).length === 0) return null
++      return this._validated() ? null:<Text style = { styles.invalidFile }>please select a ppt or pptx file</Text>
++    }
++ 
++
++    /**
++     * Implements React's {@link Component#render()}.
++     *
++     * @inheritdoc
++     */
++    render() {
++        return (
++            <CustomSubmitDialog
++                okDisabled={ !this._validated() }
++                okKey="Submit"
++                onCancel = { this._onCancel }
++                onSubmit = { this._toggleUploadPPT.bind(this) }>
++                  
++                <View style= { styles.container }>
++                  <Text style= { styles.title }>Upload a presentation</Text>
++                  <View style={ styles.upload } >
++                    <Text style={ styles.fileInfo }>{ this.getFilename() }</Text>
++                    <TouchableOpacity style = { styles.button } onPress={this.selectFileTapped.bind(this)}>
++                        <Text>Choose file...</Text>
++                    </TouchableOpacity>
++                  </View>   
++                  {this._invalidFile()}
++                </View>  
++            </CustomSubmitDialog>
++        );
++    }
++
++    /**
++    * It returns a boolean to comply the Dialog behaviour:
++    *     {@code true} - the dialog should be closed.
++    *     {@code false} - the dialog should be left open.
++    */
++        _toggleUploadPPT() {
++
++          const { onPostSubmit } = this.props;
++
++          onPostSubmit && onPostSubmit(this.state.file);
++
++          return false;
++      }
++  }
++
++ /**
++ * Maps part of the Redux state to the props of this component.
++ *
++ * @param {Object} state - The Redux state.
++ * @param {Object} ownProps - The properties explicitly passed to the component instance.
++ * @private
++ * @returns {Props}
++ */
++function _mapStateToProps(state, ownProps): Object {
++  const { failed = false, loading = false} = state['features/upload-ppt'];
++
++  return {
++     uploadFailed: failed,
++     uploading: loading
++  };
++}
++
++export default connect(_mapStateToProps)(UploadPPTDialog);
+diff --git a/react/features/upload-ppt/components/native/UploadPresentationButton.js b/react/features/upload-ppt/components/native/UploadPresentationButton.js
+index a799f1a1b..f179aabdd 100644
+--- a/react/features/upload-ppt/components/native/UploadPresentationButton.js
++++ b/react/features/upload-ppt/components/native/UploadPresentationButton.js
+@@ -7,7 +7,7 @@ import { IconPPT } from '../../../base/icons';
+ import { connect } from '../../../base/redux';
+ import { getLocalParticipant } from '../../../base/participants';
+ import { AbstractButton, type AbstractButtonProps } from '../../../base/toolbox/components';
+-import { toggleSharedPresentation } from '../../actions.native';
++import { toggleUploadPresentation } from '../../actions.native';
+ import { getFeatureFlag, UPLOAD_PPT_ENABLED } from '../../../base/flags';
+ import { Alert } from 'react-native';
+ 
+@@ -23,13 +23,6 @@ import { Alert } from 'react-native';
+      */
+     _isDisabled: boolean,
+ 
+-
+-    /**
+-     * Whether or not the local participant is sharing a PPT.
+-     */
+-     _sharingPPT: boolean,
+-
+-
+     /**
+      * The redux {@code dispatch} function.
+      */
+@@ -84,13 +77,13 @@ class UploadPresentationButton extends AbstractButton<Props, *> {
+     
+ 
+     /**
+-     * Dispatches an action to toggle presentation sharing.
++     * Dispatches an action to toggle presentation upload.
+      *
+      * @private
+      * @returns {void}
+      */
+     _doToggleUploadPresentation(){
+-        this.props.dispatch(toggleSharedPresentation())
++        this.props.dispatch(toggleUploadPresentation())
+     }
+ }
+ 
+@@ -104,22 +97,20 @@ class UploadPresentationButton extends AbstractButton<Props, *> {
+  * @returns {Props}
+  */
+  function _mapStateToProps(state, ownProps): Object {
+-    const { ownerId, status: sharedPPTStatus } = state['features/upload-ppt'];
++    const { ownerId, status } = state['features/upload-ppt'];
+     const localParticipantId = getLocalParticipant(state).id;
+     const enabled = getFeatureFlag(state, UPLOAD_PPT_ENABLED, true);
+     const { visible = enabled } = ownProps;
+ 
+     if (ownerId !== localParticipantId) {
+         return {
+-            _isDisabled: sharedPPTStatus,
+-            _sharingPPT: false,
++            _isDisabled: false,
+             visible
+         };
+     }
+ 
+     return {
+         _isDisabled: false,
+-        _sharingPPT: sharedPPTStatus,
+         visible
+     };
+ }
+diff --git a/react/features/upload-ppt/components/native/index.js b/react/features/upload-ppt/components/native/index.js
+index eadeee5d4..999db9ad2 100644
+--- a/react/features/upload-ppt/components/native/index.js
++++ b/react/features/upload-ppt/components/native/index.js
+@@ -1,4 +1,4 @@
+ // @flow
+ 
+ export { default as UploadPresentationButton } from './UploadPresentationButton'
+-export { default as SharedPPTDialog } from './SharedPPTDialog'
+\ No newline at end of file
++export { default as UploadPPTDialog } from './UploadPPTDialog'
+\ No newline at end of file
+diff --git a/react/features/upload-ppt/components/native/styles.js b/react/features/upload-ppt/components/native/styles.js
+new file mode 100644
+index 000000000..713ec49a1
+--- /dev/null
++++ b/react/features/upload-ppt/components/native/styles.js
+@@ -0,0 +1,37 @@
++import { PixelRatio, StyleSheet } from 'react-native';
++
++const styles = StyleSheet.create({
++    container: {
++      justifyContent: 'center',
++      alignItems: 'center',
++      height:100
++    },
++    button: {
++      borderColor: '#9B9B9B',
++      borderWidth: 1 / PixelRatio.get(),
++      justifyContent:"center",
++      alignItems:"center",
++      margin: 5,
++      padding: 5
++    },
++    fileInfo: {
++      borderColor: '#9B9B9B',
++      borderWidth: 1 / PixelRatio.get(),
++      margin: 5,
++      padding: 5,
++      width:"70%"
++    },
++    upload:{
++      flexDirection:"row"
++    },
++    title:{
++      fontWeight:"bold",
++      fontSize:17,
++      paddingBottom:10
++    },
++    invalidFile: {
++      color:"red"
++    }
++  });
++
++  export default styles
+\ No newline at end of file
+diff --git a/react/features/upload-ppt/middleware.any.js b/react/features/upload-ppt/middleware.any.js
+new file mode 100644
+index 000000000..145953bf2
+--- /dev/null
++++ b/react/features/upload-ppt/middleware.any.js
+@@ -0,0 +1,73 @@
++// @flow
++
++import { CONFERENCE_LEFT, getCurrentConference, getRoomName} from '../base/conference';
++import { getLocalParticipant, PARTICIPANT_LEFT, participantLeft } from '../base/participants';
++import { MiddlewareRegistry, StateListenerRegistry } from '../base/redux';
++
++import { SET_UPLOAD_PPT_STATUS } from './actionTypes';
++import { resetUploadPPTStatus, retryUpload, setUploadPPTStatus } from './actions.any';
++
++
++/**
++ * Middleware for uploading the ppt
++ * 
++ * @param {Store} store - The redux store.
++ * @returns {Function}
++ */
++MiddlewareRegistry.register(store => next => async action => {
++    const { dispatch, getState } = store;
++    const state = getState();
++    const conference = getCurrentConference(state)
++    const room = getRoomName(state)
++    const localParticipantId = getLocalParticipant(state)?.id;
++    const { file, ownerId } = action;
++
++
++    switch (action.type) {
++
++        case CONFERENCE_LEFT:
++            dispatch(resetUploadPPTStatus());
++            break;
++
++        case SET_UPLOAD_PPT_STATUS:
++            if (localParticipantId === ownerId) {
++                try{
++                    var formdata = new FormData();
++                    formdata.append("sampleFile", { name: file.fileName, uri: file.uri, type: file.type });
++                    formdata.append("username", room)
++
++                    var requestOptions = {
++                        method: 'POST',
++                        body: formdata,
++                        redirect: 'follow'
++                    };
++
++                    fetch("https://sangoshthee.cdac.in/FileUploadService", requestOptions)
++                        .then(response => response.json())
++                        .then(result =>  { 
++                            console.log(result)
++                            if(result.status === "1"){
++                                dispatch({
++                                    type: SET_UPLOAD_PPT_STATUS,
++                                    ownerId: localParticipantId,
++                                    status: result.status,
++                                    ownerId
++                                })
++                            }
++                            else dispatch(retryUpload())
++                        })
++                        .catch(error => console.log('error', error)); 
++                } catch(err){
++                    console.log(err)
++                }
++            }
++            break;
++
++        case PARTICIPANT_LEFT:
++            dispatch(participantLeft(localParticipantId, conference, false));
++            break;
++        }
++
++    return next(action);
++});
++
+diff --git a/react/features/upload-ppt/middleware.native.js b/react/features/upload-ppt/middleware.native.js
+new file mode 100644
+index 000000000..fefd329e8
+--- /dev/null
++++ b/react/features/upload-ppt/middleware.native.js
+@@ -0,0 +1 @@
++import './middleware.any';
+diff --git a/react/features/upload-ppt/reducer.native.js b/react/features/upload-ppt/reducer.native.js
+index 9a4c2b29f..aee96f171 100644
+--- a/react/features/upload-ppt/reducer.native.js
++++ b/react/features/upload-ppt/reducer.native.js
+@@ -2,7 +2,7 @@
+ 
+ import { ReducerRegistry } from '../base/redux';
+ 
+-import { RESET_SHARED_PPT_STATUS, SET_SHARED_PPT_STATUS } from './actionTypes';
++import { SET_UPLOAD_PPT_STATUS, RESET_UPLOAD_PPT_STATUS, RETRY_UPLOAD} from './actionTypes';
+ 
+ const initialState = {};
+ 
+@@ -10,18 +10,23 @@ const initialState = {};
+  * Reduces the Redux actions of the feature features/upload-ppt.
+  */
+ ReducerRegistry.register('features/upload-ppt', (state = initialState, action) => {
+-    const { status, time, ownerId } = action;
++    const { file, status, ownerId } = action;
+ 
+     switch (action.type) {
+-    case RESET_SHARED_PPT_STATUS:
++    case RESET_UPLOAD_PPT_STATUS:
+         return initialState;
+-    case SET_SHARED_PPT_STATUS:
++    case SET_UPLOAD_PPT_STATUS:
+         return {
+             ...state,
+             ownerId,
+             status,
+-            time
++            file
+         };
++    case RETRY_UPLOAD:
++        return {
++            failed: true,
++            loading: false
++        }
+     default:
+         return state;
+     }
+-- 
+2.25.1
+

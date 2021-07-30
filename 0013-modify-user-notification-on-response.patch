@@ -1,0 +1,68 @@
+From efd4e7be98d95f0dedd2111708274d0dfebe22ac Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Fri, 23 Jul 2021 15:28:31 +0530
+Subject: [PATCH 13/18] modify user notification on response
+
+---
+ react/features/upload-ppt/middleware.any.js | 31 ++++++++++++++++-----
+ 1 file changed, 24 insertions(+), 7 deletions(-)
+
+diff --git a/react/features/upload-ppt/middleware.any.js b/react/features/upload-ppt/middleware.any.js
+index 5c22cbcc0..2c0d40315 100644
+--- a/react/features/upload-ppt/middleware.any.js
++++ b/react/features/upload-ppt/middleware.any.js
+@@ -51,27 +51,44 @@ MiddlewareRegistry.register(store => next => async action => {
+                   
+ 
+                     fetch("https://sangoshthee.cdac.in/FileUploadService", requestOptions)
+-                        .then(response => response.text())
++                        .then(response => {
++                            if(response.status !== 200){
++                                dispatch(openDialog(AlertDialog, {
++                                    contentKey:{
++                                        key: response.status
++                                    }
++                                }))
++                                
++                            }
++                            else return response.json()
++                        })
+                         .then(result =>  { 
+                             console.log(result)
+-                            if(result.status === "1"){
++                            if(result.status === "1" || result.status === "0" ){
+                                 dispatch({
+                                     type: SET_UPLOAD_PPT_STATUS,
+                                     file,
+                                     status: result.status,
+                                     ownerId
+                                 })
+-                            }
+-                            dispatch(openDialog(AlertDialog, {
+-                                contentKey:{
+-                                    key: result.message
++                                dispatch(openDialog(AlertDialog, {
++                                    contentKey:{
++                                        key: result.msg
++                                    }
++                                }))
++                            }else dispatch(openDialog(AlertDialog, {
++                                contentKey: {
++                                    key: "Server Error"
+                                 }
+                             }))
++                           
+                         })
+                         .catch(error => {
+                             console.log('error', error)
+                             dispatch(openDialog(AlertDialog, {
+-                                contentKey:error
++                                contentKey:{
++                                    key: error
++                                }
+                             }))
+                         }); 
+                         dispatch({ 
+-- 
+2.25.1
+

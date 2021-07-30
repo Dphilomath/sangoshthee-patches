@@ -1,0 +1,157 @@
+From 0e2ba74e33387f0ac945cad9a99e9975fd6f1825 Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Thu, 15 Jul 2021 20:05:02 +0530
+Subject: [PATCH 09/18] renamed presentation to upload-ppt
+
+---
+ react/features/app/reducers.native.js                         | 2 +-
+ react/features/toolbox/components/native/OverflowMenu.js      | 2 +-
+ react/features/{presentation => upload-ppt}/actionTypes.js    | 0
+ react/features/{presentation => upload-ppt}/actions.any.js    | 4 ++--
+ react/features/{presentation => upload-ppt}/actions.native.js | 0
+ .../components/AbstractSharedPPTDialog.js                     | 0
+ .../{presentation => upload-ppt}/components/_.native.js       | 0
+ .../features/{presentation => upload-ppt}/components/index.js | 0
+ .../components/native/SharedPPTDialog.js                      | 0
+ .../components/native/UploadPresentationButton.js             | 2 +-
+ .../{presentation => upload-ppt}/components/native/index.js   | 0
+ react/features/{presentation => upload-ppt}/constants.js      | 0
+ react/features/{presentation => upload-ppt}/functions.js      | 0
+ react/features/{presentation => upload-ppt}/reducer.native.js | 4 ++--
+ 14 files changed, 7 insertions(+), 7 deletions(-)
+ rename react/features/{presentation => upload-ppt}/actionTypes.js (100%)
+ rename react/features/{presentation => upload-ppt}/actions.any.js (95%)
+ rename react/features/{presentation => upload-ppt}/actions.native.js (100%)
+ rename react/features/{presentation => upload-ppt}/components/AbstractSharedPPTDialog.js (100%)
+ rename react/features/{presentation => upload-ppt}/components/_.native.js (100%)
+ rename react/features/{presentation => upload-ppt}/components/index.js (100%)
+ rename react/features/{presentation => upload-ppt}/components/native/SharedPPTDialog.js (100%)
+ rename react/features/{presentation => upload-ppt}/components/native/UploadPresentationButton.js (98%)
+ rename react/features/{presentation => upload-ppt}/components/native/index.js (100%)
+ rename react/features/{presentation => upload-ppt}/constants.js (100%)
+ rename react/features/{presentation => upload-ppt}/functions.js (100%)
+ rename react/features/{presentation => upload-ppt}/reducer.native.js (76%)
+
+diff --git a/react/features/app/reducers.native.js b/react/features/app/reducers.native.js
+index d7dbf1337..38964777d 100644
+--- a/react/features/app/reducers.native.js
++++ b/react/features/app/reducers.native.js
+@@ -8,5 +8,5 @@ import '../mobile/full-screen/reducer';
+ import '../mobile/incoming-call/reducer';
+ import '../mobile/watchos/reducer';
+ import '../shared-video/reducer';
+-import '../presentation/reducer'
++import '../upload-ppt/reducer'
+ import './reducers.any';
+diff --git a/react/features/toolbox/components/native/OverflowMenu.js b/react/features/toolbox/components/native/OverflowMenu.js
+index af227487b..daf5b8206 100644
+--- a/react/features/toolbox/components/native/OverflowMenu.js
++++ b/react/features/toolbox/components/native/OverflowMenu.js
+@@ -22,7 +22,7 @@ import HelpButton from '../HelpButton';
+ import MuteEveryoneButton from '../MuteEveryoneButton';
+ import MuteEveryonesVideoButton from '../MuteEveryonesVideoButton';
+ 
+-import { UploadPresentationButton } from '../../../presentation/components'
++import { UploadPresentationButton } from '../../../upload-ppt/components'
+ 
+ import AudioOnlyButton from './AudioOnlyButton';
+ import MoreOptionsButton from './MoreOptionsButton';
+diff --git a/react/features/presentation/actionTypes.js b/react/features/upload-ppt/actionTypes.js
+similarity index 100%
+rename from react/features/presentation/actionTypes.js
+rename to react/features/upload-ppt/actionTypes.js
+diff --git a/react/features/presentation/actions.any.js b/react/features/upload-ppt/actions.any.js
+similarity index 95%
+rename from react/features/presentation/actions.any.js
+rename to react/features/upload-ppt/actions.any.js
+index ca424fb1f..a9b888287 100644
+--- a/react/features/presentation/actions.any.js
++++ b/react/features/upload-ppt/actions.any.js
+@@ -62,7 +62,7 @@ export function showSharedPPTDialog() {
+ export function stopSharedPPT() {
+     return (dispatch, getState) => {
+         const state = getState();
+-        const { ownerId } = state['features/presentation'];
++        const { ownerId } = state['features/upload-ppt'];
+         const localParticipant = getLocalParticipant(state);
+ 
+         if (ownerId === localParticipant.id) {
+@@ -104,7 +104,7 @@ export function playSharedPPT() {
+ export function toggleSharedPresentation() {
+     return (dispatch, getState) => {
+         const state = getState();
+-        const { status } = state['features/presentation'];
++        const { status } = state['features/upload-ppt'];
+ 
+         if (status === true ) {
+             dispatch(stopSharedPPT());
+diff --git a/react/features/presentation/actions.native.js b/react/features/upload-ppt/actions.native.js
+similarity index 100%
+rename from react/features/presentation/actions.native.js
+rename to react/features/upload-ppt/actions.native.js
+diff --git a/react/features/presentation/components/AbstractSharedPPTDialog.js b/react/features/upload-ppt/components/AbstractSharedPPTDialog.js
+similarity index 100%
+rename from react/features/presentation/components/AbstractSharedPPTDialog.js
+rename to react/features/upload-ppt/components/AbstractSharedPPTDialog.js
+diff --git a/react/features/presentation/components/_.native.js b/react/features/upload-ppt/components/_.native.js
+similarity index 100%
+rename from react/features/presentation/components/_.native.js
+rename to react/features/upload-ppt/components/_.native.js
+diff --git a/react/features/presentation/components/index.js b/react/features/upload-ppt/components/index.js
+similarity index 100%
+rename from react/features/presentation/components/index.js
+rename to react/features/upload-ppt/components/index.js
+diff --git a/react/features/presentation/components/native/SharedPPTDialog.js b/react/features/upload-ppt/components/native/SharedPPTDialog.js
+similarity index 100%
+rename from react/features/presentation/components/native/SharedPPTDialog.js
+rename to react/features/upload-ppt/components/native/SharedPPTDialog.js
+diff --git a/react/features/presentation/components/native/UploadPresentationButton.js b/react/features/upload-ppt/components/native/UploadPresentationButton.js
+similarity index 98%
+rename from react/features/presentation/components/native/UploadPresentationButton.js
+rename to react/features/upload-ppt/components/native/UploadPresentationButton.js
+index b6998d323..a799f1a1b 100644
+--- a/react/features/presentation/components/native/UploadPresentationButton.js
++++ b/react/features/upload-ppt/components/native/UploadPresentationButton.js
+@@ -104,7 +104,7 @@ class UploadPresentationButton extends AbstractButton<Props, *> {
+  * @returns {Props}
+  */
+  function _mapStateToProps(state, ownProps): Object {
+-    const { ownerId, status: sharedPPTStatus } = state['features/presentation'];
++    const { ownerId, status: sharedPPTStatus } = state['features/upload-ppt'];
+     const localParticipantId = getLocalParticipant(state).id;
+     const enabled = getFeatureFlag(state, UPLOAD_PPT_ENABLED, true);
+     const { visible = enabled } = ownProps;
+diff --git a/react/features/presentation/components/native/index.js b/react/features/upload-ppt/components/native/index.js
+similarity index 100%
+rename from react/features/presentation/components/native/index.js
+rename to react/features/upload-ppt/components/native/index.js
+diff --git a/react/features/presentation/constants.js b/react/features/upload-ppt/constants.js
+similarity index 100%
+rename from react/features/presentation/constants.js
+rename to react/features/upload-ppt/constants.js
+diff --git a/react/features/presentation/functions.js b/react/features/upload-ppt/functions.js
+similarity index 100%
+rename from react/features/presentation/functions.js
+rename to react/features/upload-ppt/functions.js
+diff --git a/react/features/presentation/reducer.native.js b/react/features/upload-ppt/reducer.native.js
+similarity index 76%
+rename from react/features/presentation/reducer.native.js
+rename to react/features/upload-ppt/reducer.native.js
+index ec4ea214b..9a4c2b29f 100644
+--- a/react/features/presentation/reducer.native.js
++++ b/react/features/upload-ppt/reducer.native.js
+@@ -7,9 +7,9 @@ import { RESET_SHARED_PPT_STATUS, SET_SHARED_PPT_STATUS } from './actionTypes';
+ const initialState = {};
+ 
+ /**
+- * Reduces the Redux actions of the feature features/presentation.
++ * Reduces the Redux actions of the feature features/upload-ppt.
+  */
+-ReducerRegistry.register('features/presentation', (state = initialState, action) => {
++ReducerRegistry.register('features/upload-ppt', (state = initialState, action) => {
+     const { status, time, ownerId } = action;
+ 
+     switch (action.type) {
+-- 
+2.25.1
+

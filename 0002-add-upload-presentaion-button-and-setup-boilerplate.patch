@@ -1,0 +1,246 @@
+From dd5b8df6d3fcd45ec9bb88ab0684b82b684c9e31 Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Mon, 5 Jul 2021 22:13:03 +0530
+Subject: [PATCH 02/18] add upload presentaion button and setup boilerplate
+
+---
+ lang/main.json                                |  7 +-
+ react/features/base/flags/constants.js        |  6 ++
+ react/features/base/icons/svg/index.js        |  1 +
+ react/features/base/icons/svg/pptIcon.svg     | 12 +++
+ react/features/presentation/actions.any.js    |  0
+ react/features/presentation/actions.native.js |  1 +
+ .../presentation/components/_.native.js       |  1 +
+ .../features/presentation/components/index.js |  1 +
+ .../native/UploadPresentationButton.js        | 96 +++++++++++++++++++
+ .../toolbox/components/native/OverflowMenu.js |  3 +
+ 10 files changed, 126 insertions(+), 2 deletions(-)
+ create mode 100644 react/features/base/icons/svg/pptIcon.svg
+ create mode 100644 react/features/presentation/actions.any.js
+ create mode 100644 react/features/presentation/actions.native.js
+ create mode 100644 react/features/presentation/components/_.native.js
+ create mode 100644 react/features/presentation/components/index.js
+ create mode 100644 react/features/presentation/components/native/UploadPresentationButton.js
+
+diff --git a/lang/main.json b/lang/main.json
+index ab8f3d331..e4b02fde6 100644
+--- a/lang/main.json
++++ b/lang/main.json
+@@ -831,7 +831,9 @@
+             "videoblur": "Toggle video blur",
+             "selectBackground": "Select Background",
+             "expand": "Expand",
+-            "collapse": "Collapse"
++            "collapse": "Collapse",
++            "uploadPresentation":"Upload Presentation",
++            "stopPresentation": "Stop Presentation"
+         },
+         "addPeople": "Add people to your call",
+         "audioSettings": "Audio settings",
+@@ -896,7 +898,8 @@
+         "tileViewToggle": "Toggle tile view",
+         "toggleCamera": "Toggle camera",
+         "videomute": "Start / Stop camera",
+-        "selectBackground": "Select background"
++        "selectBackground": "Select background",
++        "uploadPresentation" : "Upload Presentation"
+     },
+     "transcribing": {
+         "ccButtonTooltip": "Start / Stop subtitles",
+diff --git a/react/features/base/flags/constants.js b/react/features/base/flags/constants.js
+index 692b27d8e..928ed5755 100644
+--- a/react/features/base/flags/constants.js
++++ b/react/features/base/flags/constants.js
+@@ -214,3 +214,9 @@ export const VIDEO_SHARE_BUTTON_ENABLED = 'video-share.enabled';
+  * Default: disabled (false).
+  */
+ export const WELCOME_PAGE_ENABLED = 'welcomepage.enabled';
++
++
++/**
++ * Flag indicating if the upload presentation button should be enabled..
++ */
++export const UPLOAD_PPT_ENABLED = 'upload-presentation.enabled'
+\ No newline at end of file
+diff --git a/react/features/base/icons/svg/index.js b/react/features/base/icons/svg/index.js
+index 22cb816cd..019275ff1 100644
+--- a/react/features/base/icons/svg/index.js
++++ b/react/features/base/icons/svg/index.js
+@@ -131,3 +131,4 @@ export { default as IconWifi2Bars } from './wifi-2.svg';
+ export { default as IconWifi3Bars } from './wifi-3.svg';
+ export { default as IconYahoo } from './yahoo.svg';
+ export { default as IconSip } from './sip.svg';
++export {default as IconPPT } from './pptIcon.svg'
+diff --git a/react/features/base/icons/svg/pptIcon.svg b/react/features/base/icons/svg/pptIcon.svg
+new file mode 100644
+index 000000000..673be282a
+--- /dev/null
++++ b/react/features/base/icons/svg/pptIcon.svg
+@@ -0,0 +1,12 @@
++
++<svg viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
++    <g id="55.-Presentation" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
++        <rect id="Layer-1" stroke="#222F3E" stroke-width="4" x="2" y="2" width="96" height="9.6"></rect>
++        <polyline id="Layer-2" stroke="#222F3E" stroke-width="4" points="93.2 11.6 93.2 80.72 6.8 80.72 6.8 11.6 6.8 11.6"></polyline>
++        <path d="M2,80.72 L98,80.72" id="Layer-3" stroke="#222F3E" stroke-width="4"></path>
++        <path d="M50,80.72 L50,90.32" id="Layer-4" stroke="#222F3E" stroke-width="4"></path>
++        <circle id="Layer-5" stroke="#222F3E" stroke-width="4" cx="50" cy="93.2" r="4.8"></circle>
++        <polyline id="Layer-6" stroke="#222F3E" stroke-width="4" points="73.04 68.24 26.96 68.24 26.96 22.16 26.96 22.16"></polyline>
++        <polyline id="Layer-7" stroke="#222F3E" stroke-width="4" points="26.96 52.112 38.5626875 40.592 50 52.112 73.04 29.072"></polyline>
++    </g>
++</svg>
+\ No newline at end of file
+diff --git a/react/features/presentation/actions.any.js b/react/features/presentation/actions.any.js
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/react/features/presentation/actions.native.js b/react/features/presentation/actions.native.js
+new file mode 100644
+index 000000000..3f438538a
+--- /dev/null
++++ b/react/features/presentation/actions.native.js
+@@ -0,0 +1 @@
++export * from './actions.any';
+\ No newline at end of file
+diff --git a/react/features/presentation/components/_.native.js b/react/features/presentation/components/_.native.js
+new file mode 100644
+index 000000000..e9c52f138
+--- /dev/null
++++ b/react/features/presentation/components/_.native.js
+@@ -0,0 +1 @@
++export * from './native';
+\ No newline at end of file
+diff --git a/react/features/presentation/components/index.js b/react/features/presentation/components/index.js
+new file mode 100644
+index 000000000..0b96f973d
+--- /dev/null
++++ b/react/features/presentation/components/index.js
+@@ -0,0 +1 @@
++export { default as UploadPresentationButton } from './native/UploadPresentationButton';
+\ No newline at end of file
+diff --git a/react/features/presentation/components/native/UploadPresentationButton.js b/react/features/presentation/components/native/UploadPresentationButton.js
+new file mode 100644
+index 000000000..d4c61ea9e
+--- /dev/null
++++ b/react/features/presentation/components/native/UploadPresentationButton.js
+@@ -0,0 +1,96 @@
++// @flow
++import type { Dispatch } from 'redux';
++
++
++import { translate } from '../../../base/i18n';
++import { IconPPT } from '../../../base/icons';
++import { connect } from '../../../base/redux';
++import { getLocalParticipant } from '../../../base/participants';
++import { AbstractButton, type AbstractButtonProps } from '../../../base/toolbox/components';
++import { getFeatureFlag, UPLOAD_PPT_ENABLED } from '../../../base/flags';
++
++
++/**
++ * The type of the React {@code Component} props of {@link TileViewButton}.
++ */
++ type Props = AbstractButtonProps & {
++
++    /**
++     * Whether or not the button is disabled.
++     */
++    _isDisabled: boolean,
++
++
++    /**
++     * The redux {@code dispatch} function.
++     */
++    dispatch: Dispatch<any>
++};
++
++/**
++ * Component that renders an upload presentation button..
++ *
++ * @extends AbstractButton
++ */
++class UploadPresentationButton extends AbstractButton<Props, *> {
++    accessibilityLabel = 'toolbar.accessibilityLabel.uploadPresentation';
++    icon = IconPPT;
++    label = 'toolbar.uploadPresentation';
++    toggledLabel = 'toolbar.stopPresntation';
++
++    /**
++     * Handles clicking / pressing the button.
++     *
++     * @override
++     * @protected
++     * @returns {void}
++     */
++    _handleClick() {
++        this._doToggleUploadPresentation
++    }
++
++    /**
++     * Indicates whether this button is disabled or not.
++     *
++     * @override
++     * @protected
++     * @returns {boolean}
++     */
++    _isDisabled() {
++        return this.props._isDisabled;
++    }
++    
++
++    /**
++     * Dispatches an action to toggle video sharing.
++     *
++     * @private
++     * @returns {void}
++     */
++    _doToggleUploadPresentation(){
++        this.props.dispatch(togglePresentation())
++    }
++}
++
++
++/**
++ * Maps part of the Redux state to the props of this component.
++ *
++ * @param {Object} state - The Redux state.
++ * @param {Object} ownProps - The properties explicitly passed to the component instance.
++ * @private
++ * @returns {Props}
++ */
++ function _mapStateToProps(state, ownProps): Object {
++    const _localParticipant = getLocalParticipant(state);
++    const enabled = getFeatureFlag(state, UPLOAD_PPT_ENABLED, true);
++    const { visible = enabled } = ownProps;
++
++    return {
++        _localParticipant,
++        // _raisedHand: _localParticipant.raisedHand,
++        visible
++    };
++}
++
++export default translate(connect(_mapStateToProps)(UploadPresentationButton));
+\ No newline at end of file
+diff --git a/react/features/toolbox/components/native/OverflowMenu.js b/react/features/toolbox/components/native/OverflowMenu.js
+index 018cd81bf..af227487b 100644
+--- a/react/features/toolbox/components/native/OverflowMenu.js
++++ b/react/features/toolbox/components/native/OverflowMenu.js
+@@ -22,6 +22,8 @@ import HelpButton from '../HelpButton';
+ import MuteEveryoneButton from '../MuteEveryoneButton';
+ import MuteEveryonesVideoButton from '../MuteEveryonesVideoButton';
+ 
++import { UploadPresentationButton } from '../../../presentation/components'
++
+ import AudioOnlyButton from './AudioOnlyButton';
+ import MoreOptionsButton from './MoreOptionsButton';
+ import RaiseHandButton from './RaiseHandButton';
+@@ -138,6 +140,7 @@ class OverflowMenu extends PureComponent<Props, State> {
+                 <AudioRouteButton { ...buttonProps } />
+                 {!toolbarButtons.has('invite') && <InviteButton { ...buttonProps } />}
+                 <AudioOnlyButton { ...buttonProps } />
++                <UploadPresentationButton { ...buttonProps }/>
+                 {!toolbarButtons.has('raisehand') && <RaiseHandButton { ...buttonProps } />}
+                 <SecurityDialogButton { ...buttonProps } />
+                 <ScreenSharingButton { ...buttonProps } />
+-- 
+2.25.1
+

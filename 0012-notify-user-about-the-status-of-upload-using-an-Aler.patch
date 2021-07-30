@@ -1,0 +1,206 @@
+From 5f8e4c0e629f66f98378e66b38fad56ea7b69fb5 Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Mon, 19 Jul 2021 09:50:16 +0530
+Subject: [PATCH 12/18] notify user about the status of upload using an
+ AlertDialog
+
+---
+ react/features/upload-ppt/actionTypes.js    |  4 ++
+ react/features/upload-ppt/actions.any.js    | 11 ++---
+ react/features/upload-ppt/middleware.any.js | 48 ++++++++++++++++-----
+ react/features/upload-ppt/reducer.native.js |  9 ++--
+ 4 files changed, 49 insertions(+), 23 deletions(-)
+
+diff --git a/react/features/upload-ppt/actionTypes.js b/react/features/upload-ppt/actionTypes.js
+index fa842bf00..357aa155a 100644
+--- a/react/features/upload-ppt/actionTypes.js
++++ b/react/features/upload-ppt/actionTypes.js
+@@ -32,3 +32,7 @@ export const RESET_UPLOAD_PPT_STATUS = 'RESET_SHARED_PPT_STATUS';
+ export const SET_DISABLE_BUTTON = 'SET_DISABLE_BUTTON';
+ 
+ export const RETRY_UPLOAD = 'RETRY_UPLOAD'
++
++export const SET_UPLOADING = 'SET_UPLOADING'
++
++export const TRY_UPLOAD = 'TRY_UPLOAD'
+diff --git a/react/features/upload-ppt/actions.any.js b/react/features/upload-ppt/actions.any.js
+index 746e02304..3238e59fb 100644
+--- a/react/features/upload-ppt/actions.any.js
++++ b/react/features/upload-ppt/actions.any.js
+@@ -3,7 +3,7 @@ import { openDialog } from '../base/dialog/actions';
+ import { getLocalParticipant } from '../base/participants';
+ import { UploadPPTDialog } from './components';
+ 
+-import { RESET_UPLOAD_PPT_STATUS, SET_UPLOAD_PPT_STATUS, RETRY_UPLOAD } from './actionTypes';
++import { RESET_UPLOAD_PPT_STATUS, SET_UPLOAD_PPT_STATUS, RETRY_UPLOAD, TRY_UPLOAD } from './actionTypes';
+ 
+ /**
+  * Resets the status of the upload PPT.
+@@ -18,6 +18,7 @@ export function resetUploadPPTStatus() {
+     };
+ }
+ 
++
+ export function setUploadPPTStatus(file) {
+     return (dispatch, getState) => {
+     
+@@ -26,19 +27,13 @@ export function setUploadPPTStatus(file) {
+         if (conference) {
+             const localParticipant = getLocalParticipant(getState());
+             dispatch({
+-                type: SET_UPLOAD_PPT_STATUS,
++                type: TRY_UPLOAD,
+                 file,
+                 ownerId: localParticipant.id
+             });
+         }
+     };
+ }
+-export function retryUpload(){
+-    return {
+-        type: RETRY_UPLOAD
+-    }
+-}
+-
+ /**
+  * Displays the dialog for uploading presentation.
+  *
+diff --git a/react/features/upload-ppt/middleware.any.js b/react/features/upload-ppt/middleware.any.js
+index 145953bf2..5c22cbcc0 100644
+--- a/react/features/upload-ppt/middleware.any.js
++++ b/react/features/upload-ppt/middleware.any.js
+@@ -4,8 +4,11 @@ import { CONFERENCE_LEFT, getCurrentConference, getRoomName} from '../base/confe
+ import { getLocalParticipant, PARTICIPANT_LEFT, participantLeft } from '../base/participants';
+ import { MiddlewareRegistry, StateListenerRegistry } from '../base/redux';
+ 
+-import { SET_UPLOAD_PPT_STATUS } from './actionTypes';
++import { SET_UPLOAD_PPT_STATUS, SET_UPLOADING, TRY_UPLOAD } from './actionTypes';
+ import { resetUploadPPTStatus, retryUpload, setUploadPPTStatus } from './actions.any';
++import { batch } from 'react-redux';
++import { openDialog } from '../base/dialog/actions';
++import { AlertDialog } from '../base/dialog/components'
+ 
+ 
+ /**
+@@ -22,49 +25,74 @@ MiddlewareRegistry.register(store => next => async action => {
+     const localParticipantId = getLocalParticipant(state)?.id;
+     const { file, ownerId } = action;
+ 
+-
+     switch (action.type) {
+ 
+         case CONFERENCE_LEFT:
+             dispatch(resetUploadPPTStatus());
+             break;
+ 
+-        case SET_UPLOAD_PPT_STATUS:
++        case TRY_UPLOAD:
+             if (localParticipantId === ownerId) {
+                 try{
+-                    var formdata = new FormData();
++                    const formdata = new FormData();
+                     formdata.append("sampleFile", { name: file.fileName, uri: file.uri, type: file.type });
+                     formdata.append("username", room)
+ 
+-                    var requestOptions = {
++                    const requestOptions = {
+                         method: 'POST',
+                         body: formdata,
+                         redirect: 'follow'
+                     };
+ 
++                    dispatch({ 
++                                type: SET_UPLOADING,
++                                loading: true 
++                            })
++                  
++
+                     fetch("https://sangoshthee.cdac.in/FileUploadService", requestOptions)
+-                        .then(response => response.json())
++                        .then(response => response.text())
+                         .then(result =>  { 
+                             console.log(result)
+                             if(result.status === "1"){
+                                 dispatch({
+                                     type: SET_UPLOAD_PPT_STATUS,
+-                                    ownerId: localParticipantId,
++                                    file,
+                                     status: result.status,
+                                     ownerId
+                                 })
+                             }
+-                            else dispatch(retryUpload())
++                            dispatch(openDialog(AlertDialog, {
++                                contentKey:{
++                                    key: result.message
++                                }
++                            }))
++                        })
++                        .catch(error => {
++                            console.log('error', error)
++                            dispatch(openDialog(AlertDialog, {
++                                contentKey:error
++                            }))
++                        }); 
++                        dispatch({ 
++                            type: SET_UPLOADING,
++                            loading:false 
+                         })
+-                        .catch(error => console.log('error', error)); 
+                 } catch(err){
+                     console.log(err)
++                    dispatch({ 
++                        type: SET_UPLOADING,
++                        loading: false 
++                    })
+                 }
+             }
+             break;
+ 
+         case PARTICIPANT_LEFT:
+-            dispatch(participantLeft(localParticipantId, conference, false));
++            batch(()=>{
++                dispatch(participantLeft(localParticipantId, conference, false));
++                dispatch(resetUploadPPTStatus())
++            })
+             break;
+         }
+ 
+diff --git a/react/features/upload-ppt/reducer.native.js b/react/features/upload-ppt/reducer.native.js
+index aee96f171..0eb50c03d 100644
+--- a/react/features/upload-ppt/reducer.native.js
++++ b/react/features/upload-ppt/reducer.native.js
+@@ -2,7 +2,7 @@
+ 
+ import { ReducerRegistry } from '../base/redux';
+ 
+-import { SET_UPLOAD_PPT_STATUS, RESET_UPLOAD_PPT_STATUS, RETRY_UPLOAD} from './actionTypes';
++import { SET_UPLOAD_PPT_STATUS, RESET_UPLOAD_PPT_STATUS, RETRY_UPLOAD, SET_UPLOADING} from './actionTypes';
+ 
+ const initialState = {};
+ 
+@@ -10,7 +10,7 @@ const initialState = {};
+  * Reduces the Redux actions of the feature features/upload-ppt.
+  */
+ ReducerRegistry.register('features/upload-ppt', (state = initialState, action) => {
+-    const { file, status, ownerId } = action;
++    const { file, status, ownerId, loading } = action;
+ 
+     switch (action.type) {
+     case RESET_UPLOAD_PPT_STATUS:
+@@ -22,10 +22,9 @@ ReducerRegistry.register('features/upload-ppt', (state = initialState, action) =
+             status,
+             file
+         };
+-    case RETRY_UPLOAD:
++    case SET_UPLOADING:
+         return {
+-            failed: true,
+-            loading: false
++            loading
+         }
+     default:
+         return state;
+-- 
+2.25.1
+

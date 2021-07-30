@@ -1,0 +1,23 @@
+From ff099052aa9026c976df609b3e6ac553381aa79f Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Wed, 7 Jul 2021 09:41:52 +0530
+Subject: [PATCH 04/18] import PPT reducer
+
+---
+ react/features/app/reducers.native.js | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/react/features/app/reducers.native.js b/react/features/app/reducers.native.js
+index 7b8a31cf0..d7dbf1337 100644
+--- a/react/features/app/reducers.native.js
++++ b/react/features/app/reducers.native.js
+@@ -8,5 +8,5 @@ import '../mobile/full-screen/reducer';
+ import '../mobile/incoming-call/reducer';
+ import '../mobile/watchos/reducer';
+ import '../shared-video/reducer';
+-
++import '../presentation/reducer'
+ import './reducers.any';
+-- 
+2.25.1
+

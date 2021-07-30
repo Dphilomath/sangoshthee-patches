@@ -1,0 +1,237 @@
+From 4c2f5dfa6d1b5fc2c89c0002f6e1ff8cdc48d579 Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Fri, 30 Jul 2021 16:02:37 +0530
+Subject: [PATCH 18/18] move PPTDialog inside Jitsi Modal
+
+---
+ .../java/org/jitsi/meet/MainActivity.java     |   6 -
+ .../main/res/layout/activity_jitsi_meet.xml   |  10 +-
+ .../share-ppt/components/native/PPTDialog.js  | 114 +++++-------------
+ .../components/native/SharedPPTDialog.js      |   4 +-
+ react/features/share-ppt/constants.js         |   2 +
+ 5 files changed, 43 insertions(+), 93 deletions(-)
+
+diff --git a/android/app/src/main/java/org/jitsi/meet/MainActivity.java b/android/app/src/main/java/org/jitsi/meet/MainActivity.java
+index d70013c42..77edaf3a0 100644
+--- a/android/app/src/main/java/org/jitsi/meet/MainActivity.java
++++ b/android/app/src/main/java/org/jitsi/meet/MainActivity.java
+@@ -233,12 +233,6 @@ public class MainActivity extends JitsiMeetActivity {
+         }
+     }
+ 
+-    // protected List<ReactPackage> getPackages() {
+-    //     return Arrays.<ReactPackage>asList(
+-    //         new MainReactPackage(),
+-    //         new FilePickerPackage() // Add package
+-    //     );
+-    // }
+ 
+     // Helper methods
+     //
+diff --git a/android/sdk/src/main/res/layout/activity_jitsi_meet.xml b/android/sdk/src/main/res/layout/activity_jitsi_meet.xml
+index 46cf5d520..c9dbf1b62 100644
+--- a/android/sdk/src/main/res/layout/activity_jitsi_meet.xml
++++ b/android/sdk/src/main/res/layout/activity_jitsi_meet.xml
+@@ -9,4 +9,12 @@
+         android:layout_height="match_parent"
+         android:name="org.jitsi.meet.sdk.JitsiMeetFragment"
+         android:id="@+id/jitsiFragment"/>
+-</FrameLayout>
+\ No newline at end of file
++
++    <WebView
++        android:layout_width="wrap_content"
++        android:layout_height="wrap_content"
++        android:id="@+id/webView"
++        android:layout_alignParentTop="true"
++        android:layout_alignParentLeft="true"
++        android:layout_alignParentStart="true" />
++</FrameLayout>
+diff --git a/react/features/share-ppt/components/native/PPTDialog.js b/react/features/share-ppt/components/native/PPTDialog.js
+index cbb69a269..b31147910 100644
+--- a/react/features/share-ppt/components/native/PPTDialog.js
++++ b/react/features/share-ppt/components/native/PPTDialog.js
+@@ -1,88 +1,16 @@
+ // // @flow
+-
+-// import React, { Component } from 'react';
+-// import { Dimensions } from "react-native";
+-// import { WebView } from 'react-native-webview';
+-
+-// import type { Dispatch } from 'redux';
+-// import { View, Text, PixelRatio, StyleSheet, TouchableOpacity } from 'react-native';
+-
+-import { CustomDialog, BaseDialog, DialogContainer } from '../../../base/dialog';
+ import { connect } from '../../../base/redux';
+ 
+-// import AbstractSharedPPTDialog from '../AbstractSharedPPTDialog';
+-
+-// /**
+-//  * Implements a component to render a display name prompt.
+-//  */
+-
+-// class PPTDialog extends Component<Props, State> {
+-
+-//     constructor(props: Props) {
+-//         super(props);
+-//         // console.log(this.props)
+-
+-//     }
+-
+-    
+-//     /**
+-//      * Implements React's {@link Component#render()}.
+-//      *
+-//      * @inheritdoc
+-//      */
+-//     render() {  
+-//         return (
+-//             <DialogContainer>
+-//                  <CustomDialog 
+-//                     style = {{...this.props.style, ...styles.pptDialog }}
+-//                     cancelKey = 'dialog.Cancel'>
+-                    
+-//                     {/* <View style={styles.container}> */}
+-//                     <WebView
+-//                         source={{
+-//                             uri: 'https://github.com/react-native-webview/react-native-webview'
+-//                         }}/>
+-//                     {/* </View> */}
+-//                 </CustomDialog>
+-//             </DialogContainer>
+-         
+-//         );
+-//     }
+-// }
+-// var width = Dimensions.get('window').width; //full width
+-// var height = Dimensions.get('window').height; //full height
+-
+-
+-// const styles = StyleSheet.create({
+-//     pptDialog: {
+-//         // flex:1,
+-//         // alignItems:"center",
+-//         // justifyContent:"center",
+-//         // width:width,
+-//         // height:height/1.8
+-        
+-//     },
+-//     container:{
+-//         flex:1,
+-//         alignItems:"center",
+-//         justifyContent:"center"
+-//     }
+-// })
+-
+-
+-// export default connect()(PPTDialog);
+-
+-
+ import React from 'react';
+ import { View, Button, Modal, StyleSheet, ActivityIndicator } from 'react-native';
+ import { WebView } from 'react-native-webview';
++import { JitsiModal } from '../../../base/modal';
++import { SHARE_PPT_ID } from '../../constants';
+ 
+ class PPTDialog extends React.Component {
+     constructor(props) {
+         super(props)
+-        this.state = {
+-            showModal : true
+-        }
++        this.ActivityIndicatorLoadingView = this.ActivityIndicatorLoadingView.bind(this)
+     }
+ 
+ 
+@@ -100,15 +28,26 @@ class PPTDialog extends React.Component {
+     render(){
+         console.log("PPTDialog.js:101 "+this.props.url)
+         return(
+-                <View style={styles.modal}>
+-                    <View style={styles.modalContainer}>
+-                        <WebView 
+-                            style={{ flex : 1 }} 
+-                            source={{uri: this.props.url}}
+-                            renderLoading={this.ActivityIndicatorLoadingView}/>
+-                    </View>
+-                </View>
+-        )
++
++
++            <JitsiModal
++                hideHeaderWithNavigation={true}
++                headerProps = {{
++                    headerLabelKey: 'Presentation'
++                }}
++                
++                modalId = { SHARE_PPT_ID }
++                style = { styles.webView }>
++
++            <WebView
++                scrollEnabled={true}
++                renderLoading = { this.ActivityIndicatorLoadingView }
++                source = {{ uri: this.props.url }}
++                startInLoadingState = { true }
++                style={{flex:1}}
++                />
++            </JitsiModal>
++        );
+     }
+ }
+ const styles = StyleSheet.create({
+@@ -120,12 +59,17 @@ const styles = StyleSheet.create({
+     },
+     modalContainer : {
+         backgroundColor : 'white',
+-        width : '100%',   // </View>
++        width : '100%', 
+         height : '40%',
+     },
+     ActivityIndicatorStyle: {
+         flex: 1,
+         justifyContent: 'center',
+     },
++    webView:{
++        flex:1,
++        justifyContent:"center",
++        alignContent:"center",
++    }
+ })
+ export default connect()(PPTDialog);
+\ No newline at end of file
+diff --git a/react/features/share-ppt/components/native/SharedPPTDialog.js b/react/features/share-ppt/components/native/SharedPPTDialog.js
+index cebc40a22..1424d199e 100644
+--- a/react/features/share-ppt/components/native/SharedPPTDialog.js
++++ b/react/features/share-ppt/components/native/SharedPPTDialog.js
+@@ -4,7 +4,9 @@ import React from 'react';
+ import { View, Text, PixelRatio, StyleSheet, TouchableOpacity } from 'react-native';
+ 
+ import { ConfirmDialog} from '../../../base/dialog';
++import { setActiveModalId } from '../../../base/modal';
+ import { connect } from '../../../base/redux';
++import { SHARE_PPT_ID } from '../../constants';
+ 
+ import AbstractSharedPPTDialog from '../AbstractSharedPPTDialog';
+ 
+@@ -41,7 +43,7 @@ class SharedPPTDialog extends AbstractSharedPPTDialog<*> {
+         _onConfirmSharePPT() {
+             const { onPostSubmit } = this.props;
+             onPostSubmit && onPostSubmit();
+-            
++            this.props.dispatch(setActiveModalId(SHARE_PPT_ID));
+             return true;
+         }
+ }
+diff --git a/react/features/share-ppt/constants.js b/react/features/share-ppt/constants.js
+index c098c2179..b7f23dc32 100644
+--- a/react/features/share-ppt/constants.js
++++ b/react/features/share-ppt/constants.js
+@@ -16,3 +16,5 @@ export const PPT_PARTICIPANT_NAME = 'PPT';
+  * @type {string}
+  */
+ export const SHARED_PPT = 'shared-ppt';
++
++export const SHARE_PPT_ID = 'SHARE_PPT_ID'
+-- 
+2.25.1
+

@@ -1,0 +1,983 @@
+From 619d3b268ebd65c573e061545635638c5d279402 Mon Sep 17 00:00:00 2001
+From: Daniyal Mahmood <daniyalmahmhmood123@gmail.com>
+Date: Wed, 14 Jul 2021 12:16:24 +0530
+Subject: [PATCH 08/18] implement basic share-ppt feature(incomplete)
+
+---
+ lang/main.json                                |  10 +-
+ react/features/app/middlewares.native.js      |   1 +
+ react/features/app/reducers.native.js         |   1 +
+ react/features/base/icons/svg/index.js        |   3 +-
+ react/features/base/icons/svg/pptIcon.svg     |  13 +-
+ react/features/base/icons/svg/sharePPT.svg    |  16 ++
+ .../native/UploadPresentationButton.js        |   6 +-
+ react/features/share-ppt/actionTypes.js       |  32 ++++
+ react/features/share-ppt/actions.any.js       | 105 +++++++++++
+ react/features/share-ppt/actions.native.js    |   1 +
+ .../components/AbstractSharedPPTDialog.js     |  46 +++++
+ .../features/share-ppt/components/_.native.js |   1 +
+ react/features/share-ppt/components/index.js  |   1 +
+ .../share-ppt/components/native/PPTDialog.js  |  68 +++++++
+ .../native/SharePresentationButton.js         | 125 +++++++++++++
+ .../components/native/SharedPPTDialog.js      |  51 +++++
+ .../share-ppt/components/native/index.js      |   5 +
+ react/features/share-ppt/constants.js         |  18 ++
+ react/features/share-ppt/functions.js         |  20 ++
+ react/features/share-ppt/middleware.any.js    | 177 ++++++++++++++++++
+ react/features/share-ppt/middleware.native.js |   1 +
+ react/features/share-ppt/reducer.native.js    |  28 +++
+ .../toolbox/components/native/OverflowMenu.js |   2 +
+ 23 files changed, 712 insertions(+), 19 deletions(-)
+ create mode 100644 react/features/base/icons/svg/sharePPT.svg
+ create mode 100644 react/features/share-ppt/actionTypes.js
+ create mode 100644 react/features/share-ppt/actions.any.js
+ create mode 100644 react/features/share-ppt/actions.native.js
+ create mode 100644 react/features/share-ppt/components/AbstractSharedPPTDialog.js
+ create mode 100644 react/features/share-ppt/components/_.native.js
+ create mode 100644 react/features/share-ppt/components/index.js
+ create mode 100644 react/features/share-ppt/components/native/PPTDialog.js
+ create mode 100644 react/features/share-ppt/components/native/SharePresentationButton.js
+ create mode 100644 react/features/share-ppt/components/native/SharedPPTDialog.js
+ create mode 100644 react/features/share-ppt/components/native/index.js
+ create mode 100644 react/features/share-ppt/constants.js
+ create mode 100644 react/features/share-ppt/functions.js
+ create mode 100644 react/features/share-ppt/middleware.any.js
+ create mode 100644 react/features/share-ppt/middleware.native.js
+ create mode 100644 react/features/share-ppt/reducer.native.js
+
+diff --git a/lang/main.json b/lang/main.json
+index b9d3e1f45..3c4e9186c 100644
+--- a/lang/main.json
++++ b/lang/main.json
+@@ -347,7 +347,8 @@
+         "Yes": "Yes",
+         "yourEntireScreen": "Your entire screen",
+         "remoteUserControls": "Remote user controls of {{username}}",
+-        "localUserControls": "Local user controls"
++        "localUserControls": "Local user controls",
++        "startPresenting": "Are you sure you want to share Presentation"
+     },
+     "dialOut": {
+         "statusMessage": "is now {{status}}"
+@@ -855,7 +856,8 @@
+             "expand": "Expand",
+             "collapse": "Collapse",
+             "uploadPresentation":"Upload Presentation",
+-            "stopPresentation": "Stop Presentation"
++            "stopPresentation": "Stop Presentation",
++            "sharePresentation":"Share Presentation"
+         },
+         "addPeople": "Add people to your call",
+         "audioSettings": "Audio settings",
+@@ -922,7 +924,9 @@
+         "toggleCamera": "Toggle camera",
+         "videomute": "Start / Stop camera",
+         "selectBackground": "Select background",
+-        "uploadPresentation" : "Upload Presentation"
++        "uploadPresentation" : "Upload Presentation",
++        "sharePresentation":"Share Presentation",
++        "stopPresentation" : "Stop Presentation"
+     },
+     "transcribing": {
+         "ccButtonTooltip": "Start / Stop subtitles",
+diff --git a/react/features/app/middlewares.native.js b/react/features/app/middlewares.native.js
+index 7f149fd20..b3cda4f12 100644
+--- a/react/features/app/middlewares.native.js
++++ b/react/features/app/middlewares.native.js
+@@ -14,5 +14,6 @@ import '../mobile/wake-lock/middleware';
+ import '../mobile/watchos/middleware';
+ import '../share-room/middleware';
+ import '../shared-video/middleware';
++import '../share-ppt/middleware'
+ 
+ import './middlewares.any';
+diff --git a/react/features/app/reducers.native.js b/react/features/app/reducers.native.js
+index d7dbf1337..f902cd4be 100644
+--- a/react/features/app/reducers.native.js
++++ b/react/features/app/reducers.native.js
+@@ -9,4 +9,5 @@ import '../mobile/incoming-call/reducer';
+ import '../mobile/watchos/reducer';
+ import '../shared-video/reducer';
+ import '../presentation/reducer'
++import '../share-ppt/reducer';
+ import './reducers.any';
+diff --git a/react/features/base/icons/svg/index.js b/react/features/base/icons/svg/index.js
+index 71d45fe4b..4ef14a9a0 100644
+--- a/react/features/base/icons/svg/index.js
++++ b/react/features/base/icons/svg/index.js
+@@ -132,4 +132,5 @@ export { default as IconWifi2Bars } from './wifi-2.svg';
+ export { default as IconWifi3Bars } from './wifi-3.svg';
+ export { default as IconYahoo } from './yahoo.svg';
+ export { default as IconSip } from './sip.svg';
+-export {default as IconPPT } from './pptIcon.svg'
++export { default as IconPPT } from './pptIcon.svg'
++export { default as IconSharePPT} from './sharePPT.svg'
+diff --git a/react/features/base/icons/svg/pptIcon.svg b/react/features/base/icons/svg/pptIcon.svg
+index 673be282a..5a9f813ad 100644
+--- a/react/features/base/icons/svg/pptIcon.svg
++++ b/react/features/base/icons/svg/pptIcon.svg
+@@ -1,12 +1 @@
+-
+-<svg viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+-    <g id="55.-Presentation" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+-        <rect id="Layer-1" stroke="#222F3E" stroke-width="4" x="2" y="2" width="96" height="9.6"></rect>
+-        <polyline id="Layer-2" stroke="#222F3E" stroke-width="4" points="93.2 11.6 93.2 80.72 6.8 80.72 6.8 11.6 6.8 11.6"></polyline>
+-        <path d="M2,80.72 L98,80.72" id="Layer-3" stroke="#222F3E" stroke-width="4"></path>
+-        <path d="M50,80.72 L50,90.32" id="Layer-4" stroke="#222F3E" stroke-width="4"></path>
+-        <circle id="Layer-5" stroke="#222F3E" stroke-width="4" cx="50" cy="93.2" r="4.8"></circle>
+-        <polyline id="Layer-6" stroke="#222F3E" stroke-width="4" points="73.04 68.24 26.96 68.24 26.96 22.16 26.96 22.16"></polyline>
+-        <polyline id="Layer-7" stroke="#222F3E" stroke-width="4" points="26.96 52.112 38.5626875 40.592 50 52.112 73.04 29.072"></polyline>
+-    </g>
+-</svg>
+\ No newline at end of file
++<svg fill="#000000" xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 50 50" width="50px" height="50px"><path d="M 7 2 L 7 48 L 43 48 L 43 14.59375 L 42.71875 14.28125 L 30.71875 2.28125 L 30.40625 2 Z M 9 4 L 29 4 L 29 16 L 41 16 L 41 46 L 9 46 Z M 31 5.4375 L 39.5625 14 L 31 14 Z"/></svg>
+\ No newline at end of file
+diff --git a/react/features/base/icons/svg/sharePPT.svg b/react/features/base/icons/svg/sharePPT.svg
+new file mode 100644
+index 000000000..58e2bed25
+--- /dev/null
++++ b/react/features/base/icons/svg/sharePPT.svg
+@@ -0,0 +1,16 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<svg viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
++    <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
++    <title>55. Presentation</title>
++    <desc>Created with Sketch.</desc>
++    <defs></defs>
++    <g id="55.-Presentation" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
++        <rect id="Layer-1" stroke="#222F3E" stroke-width="4" x="2" y="2" width="96" height="9.6"></rect>
++        <polyline id="Layer-2" stroke="#222F3E" stroke-width="4" points="93.2 11.6 93.2 80.72 6.8 80.72 6.8 11.6 6.8 11.6"></polyline>
++        <path d="M2,80.72 L98,80.72" id="Layer-3" stroke="#222F3E" stroke-width="4"></path>
++        <path d="M50,80.72 L50,90.32" id="Layer-4" stroke="#222F3E" stroke-width="4"></path>
++        <circle id="Layer-5" stroke="#222F3E" stroke-width="4" cx="50" cy="93.2" r="4.8"></circle>
++        <polyline id="Layer-6" stroke="#222F3E" stroke-width="4" points="73.04 68.24 26.96 68.24 26.96 22.16 26.96 22.16"></polyline>
++        <polyline id="Layer-7" stroke="#222F3E" stroke-width="4" points="26.96 52.112 38.5626875 40.592 50 52.112 73.04 29.072"></polyline>
++    </g>
++</svg>
+\ No newline at end of file
+diff --git a/react/features/presentation/components/native/UploadPresentationButton.js b/react/features/presentation/components/native/UploadPresentationButton.js
+index b6998d323..60202f89d 100644
+--- a/react/features/presentation/components/native/UploadPresentationButton.js
++++ b/react/features/presentation/components/native/UploadPresentationButton.js
+@@ -45,7 +45,7 @@ class UploadPresentationButton extends AbstractButton<Props, *> {
+     accessibilityLabel = 'toolbar.accessibilityLabel.uploadPresentation';
+     icon = IconPPT;
+     label = 'toolbar.uploadPresentation';
+-    toggledLabel = 'toolbar.stopPresntation';
++    toggledLabel= 'toggled';
+ 
+     /**
+      * Handles clicking / pressing the button.
+@@ -112,14 +112,14 @@ class UploadPresentationButton extends AbstractButton<Props, *> {
+     if (ownerId !== localParticipantId) {
+         return {
+             _isDisabled: sharedPPTStatus,
+-            _sharingPPT: false,
++            // _sharingPPT: false,
+             visible
+         };
+     }
+ 
+     return {
+         _isDisabled: false,
+-        _sharingPPT: sharedPPTStatus,
++        // _sharingPPT: sharedPPTStatus,
+         visible
+     };
+ }
+diff --git a/react/features/share-ppt/actionTypes.js b/react/features/share-ppt/actionTypes.js
+new file mode 100644
+index 000000000..d7379ac17
+--- /dev/null
++++ b/react/features/share-ppt/actionTypes.js
+@@ -0,0 +1,32 @@
++// @flow
++
++/**
++ * The type of the action which signals to update the current known state of the
++ * shared PPT.
++ *
++ * {
++ *     type: SET_SHARED_PPT_STATUS,
++ *     status: string
++ * }
++ */
++export const SET_SHARED_PPT_STATUS = 'SET_SHARED_PPT_STATUS';
++
++/**
++ * The type of the action which signals to reset the current known state of the
++ * shared PPT.
++ *
++ * {
++ *     type: RESET_SHARED_PPT_STATUS,
++ * }
++ */
++export const RESET_SHARED_PPT_STATUS = 'RESET_SHARED_PPT_STATUS';
++
++/**
++ * The type of the action which signals to disable or enable the shared PPT
++ * button.
++ *
++ * {
++ *     type: SET_DISABLE_BUTTON
++ * }
++ */
++export const SET_DISABLE_BUTTON = 'SET_DISABLE_BUTTON';
+diff --git a/react/features/share-ppt/actions.any.js b/react/features/share-ppt/actions.any.js
+new file mode 100644
+index 000000000..52b50e0f4
+--- /dev/null
++++ b/react/features/share-ppt/actions.any.js
+@@ -0,0 +1,105 @@
++import { getCurrentConference } from '../base/conference';
++import { openDialog } from '../base/dialog/actions';
++import { getLocalParticipant } from '../base/participants';
++import { SharedPPTDialog, PPTDialog } from './components';
++
++import { RESET_SHARED_PPT_STATUS, SET_SHARED_PPT_STATUS } from './actionTypes';
++
++/**
++ * Resets the status of the shared PPT.
++ *
++ * @returns {{
++ *     type: SET_SHARED_PPT_STATUS,
++ * }}
++ */
++export function resetSharedPPTStatus() {
++    return {
++        type: RESET_SHARED_PPT_STATUS
++    };
++}
++
++/**
++ * Updates the current known status of the shared video.
++ *
++ * @param {{
++ *     ownerId: string,
++ *     status: boolean,
++ *     time: number
++ * }} options - The options.
++ *
++ * @returns {{
++ *     type: SET_SHARED_PPT_STATUS,
++ *     ownerId: string,
++ *     status: boolean,
++ *     time: number
++ * }}
++ */
++export function setSharedPPTStatus({ status, time, ownerId }) {
++    return {
++        type: SET_SHARED_PPT_STATUS,
++        ownerId,
++        status,
++        time
++    };
++}
++
++/**
++ * Displays the presentation dialog
++ *
++ * @param {Function} onPostSubmit - The function to be invoked when sharing prompt is confirmed.
++ * @returns {Function}
++ */
++export function showSharedPPTDialog(onPostSubmit) {
++    return openDialog(SharedPPTDialog, { onPostSubmit });
++}
++
++/**
++ *
++ * Stops playing a shared PPT.
++ *
++ * @returns {Function}
++ */
++export function stopSharedPPT() {
++    return (dispatch, getState) => {
++        const state = getState();
++        const { ownerId } = state['features/shared-ppt'];
++        const localParticipant = getLocalParticipant(state);
++
++        if (ownerId === localParticipant.id) {
++            dispatch(resetSharedPPTStatus());
++        }
++    };
++}
++
++/**
++ *
++ * Plays a shared video.
++ *
++ * @param {string} videoUrl - The video url to be played.
++ *
++ * @returns {Function}
++ */
++export function playSharedPPT() {
++    return (dispatch, getState) => {
++        const {status: uploaded = false} = getState()['features/presentation']
++        dispatch(openDialog(PPTDialog, { uploaded }))
++    }
++}
++
++/**
++ *
++ * Stops the presentation.
++ *
++ * @returns {Function}
++ */
++export function toggleSharedPresentation() {
++    return (dispatch, getState) => {
++        const state = getState();
++        const { status } = state['features/shared-ppt'];
++        if (status === true ) {
++            dispatch(stopSharedPPT());
++        } else {
++            dispatch(showSharedPPTDialog(( ) => dispatch(playSharedPPT())));
++        }
++    };
++}
+diff --git a/react/features/share-ppt/actions.native.js b/react/features/share-ppt/actions.native.js
+new file mode 100644
+index 000000000..3f438538a
+--- /dev/null
++++ b/react/features/share-ppt/actions.native.js
+@@ -0,0 +1 @@
++export * from './actions.any';
+\ No newline at end of file
+diff --git a/react/features/share-ppt/components/AbstractSharedPPTDialog.js b/react/features/share-ppt/components/AbstractSharedPPTDialog.js
+new file mode 100644
+index 000000000..8a125f0d2
+--- /dev/null
++++ b/react/features/share-ppt/components/AbstractSharedPPTDialog.js
+@@ -0,0 +1,46 @@
++// @flow
++
++import { Component } from 'react';
++import type { Dispatch } from 'redux';
++
++/**
++ * The type of the React {@code Component} props of
++ * {@link AbstractSharedPPTDialog}.
++ */
++export type Props = {
++
++    /**
++     * Invoked to update the shared video link.
++     */
++    dispatch: Dispatch<any>,
++
++    /**
++     * Function to be invoked on confirm ppt sharing.
++     */
++    onPostSubmit: Function,
++
++    /**
++     * Invoked to obtain translated strings.
++     */
++    t: Function
++};
++
++/**
++ * Implements an abstract class for {@code SharedPPTDialog}.
++ */
++export default class AbstractSharedPPTDialog<S: *> extends Component < Props, S > {
++
++    /**
++     * Instantiates a new component.
++     *
++     * @inheritdoc
++     */
++    constructor(props: Props) {
++        super(props);
++
++        this._onConfirmSharePPT = this._onConfirmSharePPT.bind(this);
++    }
++
++    _onConfirmSharePPT: () => boolean;
++
++}
+diff --git a/react/features/share-ppt/components/_.native.js b/react/features/share-ppt/components/_.native.js
+new file mode 100644
+index 000000000..e9c52f138
+--- /dev/null
++++ b/react/features/share-ppt/components/_.native.js
+@@ -0,0 +1 @@
++export * from './native';
+\ No newline at end of file
+diff --git a/react/features/share-ppt/components/index.js b/react/features/share-ppt/components/index.js
+new file mode 100644
+index 000000000..cda61441e
+--- /dev/null
++++ b/react/features/share-ppt/components/index.js
+@@ -0,0 +1 @@
++export * from './_';
+diff --git a/react/features/share-ppt/components/native/PPTDialog.js b/react/features/share-ppt/components/native/PPTDialog.js
+new file mode 100644
+index 000000000..42ce94ee0
+--- /dev/null
++++ b/react/features/share-ppt/components/native/PPTDialog.js
+@@ -0,0 +1,68 @@
++// @flow
++
++import React, { Component } from 'react';
++import { Dimensions } from "react-native";
++
++import type { Dispatch } from 'redux';
++import { View, Text, PixelRatio, StyleSheet, TouchableOpacity } from 'react-native';
++
++import { CustomDialog } from '../../../base/dialog';
++import { connect } from '../../../base/redux';
++
++import AbstractSharedPPTDialog from '../AbstractSharedPPTDialog';
++
++/**
++ * Implements a component to render a display name prompt.
++ */
++class PPTDialog extends Component {
++
++    constructor(props: Props) {
++        super(props);
++        // console.log(this.props)
++
++    }
++
++    
++    /**
++     * Implements React's {@link Component#render()}.
++     *
++     * @inheritdoc
++     */
++    render() {  
++        return (
++          <CustomDialog 
++            style = {{...this.props.style, ...styles.pptDialog }}
++            cancelKey = 'dialog.Cancel'>
++            <View style={styles.container}>
++                {this._renderContent()}
++            </View>
++        </CustomDialog>
++
++        );
++    }
++    _renderContent(){
++        if(!this.props.uploaded) return <Text>No presentation uploaded</Text>
++        else return <View></View>
++    }
++}
++var width = Dimensions.get('window').width; //full width
++var height = Dimensions.get('window').height; //full height
++
++
++const styles = StyleSheet.create({
++    pptDialog: {
++        flex:1,
++        alignItems:"center",
++        justifyContent:"center",
++        width:width,
++        height:height/1.8
++    },
++    container:{
++        flex:1,
++        alignItems:"center",
++        justifyContent:"center"
++    }
++})
++
++
++export default connect()(PPTDialog);
+diff --git a/react/features/share-ppt/components/native/SharePresentationButton.js b/react/features/share-ppt/components/native/SharePresentationButton.js
+new file mode 100644
+index 000000000..e4c48dc31
+--- /dev/null
++++ b/react/features/share-ppt/components/native/SharePresentationButton.js
+@@ -0,0 +1,125 @@
++// @flow
++import type { Dispatch } from 'redux';
++
++
++import { translate } from '../../../base/i18n';
++import { IconSharePPT } from '../../../base/icons';
++import { connect } from '../../../base/redux';
++import { getLocalParticipant } from '../../../base/participants';
++import { AbstractButton, type AbstractButtonProps } from '../../../base/toolbox/components';
++import { toggleSharedPresentation } from '../../actions.native';
++import { getFeatureFlag, UPLOAD_PPT_ENABLED } from '../../../base/flags';
++
++
++/**
++ * The type of the React {@code Component} props of {@link TileViewButton}.
++ */
++ type Props = AbstractButtonProps & {
++
++    /**
++     * Whether or not the button is disabled.
++     */
++    _isDisabled: boolean,
++
++
++    /**
++     * Whether or not the local participant is sharing a PPT.
++     */
++     _sharingPPT: boolean,
++
++
++    /**
++     * The redux {@code dispatch} function.
++     */
++    dispatch: Dispatch<any>
++};
++
++/**
++ * Component that renders an upload presentation button..
++ *
++ * @extends AbstractButton
++ */
++class SharePresentationButton extends AbstractButton<Props, *> {
++    accessibilityLabel = 'toolbar.accessibilityLabel.sharePresentation';
++    icon = IconSharePPT;
++    label = 'toolbar.sharePresentation';
++    toggledLabel = 'toolbar.stopPresentation';
++
++    /**
++     * Handles clicking / pressing the button.
++     *
++     * @override
++     * @protected
++     * @returns {void}
++     */
++    _handleClick() {
++        this._doToggleUploadPresentation()
++    }
++
++
++        /**
++     * Indicates whether this button is in toggled state or not.
++     *
++     * @override
++     * @protected
++     * @returns {boolean}
++     */
++    _isToggled() {
++         return this.props._sharingPPT;
++    }
++    
++
++    /**
++     * Indicates whether this button is disabled or not.
++     *
++     * @override
++     * @protected
++     * @returns {boolean}
++     */
++    _isDisabled() {
++        return this.props._isDisabled;
++    }
++    
++
++    /**
++     * Dispatches an action to toggle presentation sharing.
++     *
++     * @private
++     * @returns {void}
++     */
++    _doToggleUploadPresentation(){
++        this.props.dispatch(toggleSharedPresentation())
++    }
++}
++
++
++/**
++ * Maps part of the Redux state to the props of this component.
++ *
++ * @param {Object} state - The Redux state.
++ * @param {Object} ownProps - The properties explicitly passed to the component instance.
++ * @private
++ * @returns {Props}
++ */
++ function _mapStateToProps(state, ownProps): Object {
++    const { ownerId, status: sharedPPTStatus } = state['features/shared-ppt'];
++    const localParticipantId = getLocalParticipant(state).id;
++    const enabled = getFeatureFlag(state, UPLOAD_PPT_ENABLED, true);
++    const { visible = enabled } = ownProps;
++
++    if (ownerId !== localParticipantId) {
++        return {
++            _isDisabled: sharedPPTStatus,
++            _sharingPPT: false,
++            visible
++        };
++    }
++
++    return {
++        _isDisabled: false,
++        _sharingPPT: sharedPPTStatus,
++        visible
++    };
++}
++
++export default translate(connect(_mapStateToProps)(SharePresentationButton));
+\ No newline at end of file
+diff --git a/react/features/share-ppt/components/native/SharedPPTDialog.js b/react/features/share-ppt/components/native/SharedPPTDialog.js
+new file mode 100644
+index 000000000..14216e01b
+--- /dev/null
++++ b/react/features/share-ppt/components/native/SharedPPTDialog.js
+@@ -0,0 +1,51 @@
++// @flow
++
++import React from 'react';
++import { View, Text, PixelRatio, StyleSheet, TouchableOpacity } from 'react-native';
++
++import { ConfirmDialog} from '../../../base/dialog';
++import { connect } from '../../../base/redux';
++
++import AbstractSharedPPTDialog from '../AbstractSharedPPTDialog';
++
++/**
++ * Implements a component to render a display name prompt.
++ */
++class SharedPPTDialog extends AbstractSharedPPTDialog<*> {
++
++    /**
++     * Implements React's {@link Component#render()}.
++     *
++     * @inheritdoc
++     */
++    render() {
++        return (
++          <ConfirmDialog
++            contentKey = 'dialog.startPresenting'
++            cancelKey = 'dialog.Cancel'
++            okKey = "Share"
++            onSubmit = { this._onConfirmSharePPT } />
++        );
++    }
++
++       /**
++     * Validates the entered video link by extracting the id and dispatches it.
++     *
++     * It returns a boolean to comply the Dialog behaviour:
++     *     {@code true} - the dialog should be closed.
++     *     {@code false} - the dialog should be left open.
++     *
++     * @param {string} link - The entered video link.
++     * @returns {boolean}
++     */
++        _onConfirmSharePPT() {
++            const { onPostSubmit } = this.props;
++            onPostSubmit && onPostSubmit();
++            
++            return false;
++        }
++}
++
++
++
++export default connect()(SharedPPTDialog);
+diff --git a/react/features/share-ppt/components/native/index.js b/react/features/share-ppt/components/native/index.js
+new file mode 100644
+index 000000000..fb2df5637
+--- /dev/null
++++ b/react/features/share-ppt/components/native/index.js
+@@ -0,0 +1,5 @@
++// @flow
++
++export { default as SharePresentationButton } from './SharePresentationButton'
++export { default as SharedPPTDialog } from './SharedPPTDialog'
++export { default as PPTDialog } from './PPTDialog'
+\ No newline at end of file
+diff --git a/react/features/share-ppt/constants.js b/react/features/share-ppt/constants.js
+new file mode 100644
+index 000000000..c098c2179
+--- /dev/null
++++ b/react/features/share-ppt/constants.js
+@@ -0,0 +1,18 @@
++// @flow
++
++
++
++/**
++ * Fixed name of the PPT sharer fake participant.
++ * @type {string}
++ */
++export const PPT_PARTICIPANT_NAME = 'PPT';
++
++
++
++
++/**
++ * Shared ppt command.
++ * @type {string}
++ */
++export const SHARED_PPT = 'shared-ppt';
+diff --git a/react/features/share-ppt/functions.js b/react/features/share-ppt/functions.js
+new file mode 100644
+index 000000000..f1c360e2d
+--- /dev/null
++++ b/react/features/share-ppt/functions.js
+@@ -0,0 +1,20 @@
++// @flow
++
++import { getParticipants } from '../base/participants';
++
++import { PPT_PARTICIPANT_NAME } from './constants';
++
++
++
++
++/**
++ * Returns true if there is a PPT is being shared in the meeting.
++ *
++ * @param {Object | Function} stateful - The Redux state or a function that gets resolved to the Redux state.
++ * @returns {boolean}
++ */
++export function isPPTPlaying(stateful: Object | Function): boolean {
++    return Boolean(getParticipants(stateful).find(p => p.isFakeParticipant
++        && (p.name === PPT_PARTICIPANT_NAME))
++    );
++}
+diff --git a/react/features/share-ppt/middleware.any.js b/react/features/share-ppt/middleware.any.js
+new file mode 100644
+index 000000000..d4bc4fa20
+--- /dev/null
++++ b/react/features/share-ppt/middleware.any.js
+@@ -0,0 +1,177 @@
++// @flow
++
++import { batch } from 'react-redux';
++
++import { CONFERENCE_LEFT, getCurrentConference } from '../base/conference';
++import {
++    PARTICIPANT_LEFT,
++    getLocalParticipant,
++    participantJoined,
++    participantLeft,
++    pinParticipant
++} from '../base/participants';
++import { MiddlewareRegistry, StateListenerRegistry } from '../base/redux';
++
++import { SET_SHARED_PPT_STATUS, RESET_SHARED_PPT_STATUS } from './actionTypes';
++import {
++    resetSharedPPTStatus,
++    setSharedPPTStatus
++} from './actions.any';
++import { SHARED_PPT, PPT_PARTICIPANT_NAME } from './constants';
++import { isSharingStatus } from './functions';
++
++/**
++ * Middleware that captures actions related to video sharing and updates
++ * components not hooked into redux.
++ *
++ * @param {Store} store - The redux store.
++ * @returns {Function}
++ */
++MiddlewareRegistry.register(store => next => action => {
++    const { dispatch, getState } = store;
++    const state = getState();
++    const conference = getCurrentConference(state);
++    const localParticipantId = getLocalParticipant(state)?.id;
++    const { videoUrl, status, ownerId, time, muted, volume } = action;
++    const { ownerId: stateOwnerId } = state['features/shared-video'];
++
++    switch (action.type) {
++    case CONFERENCE_LEFT:
++        dispatch(resetSharedPPTStatus());
++        break;
++    case PARTICIPANT_LEFT:
++        if (action.participant.id === stateOwnerId) {
++            batch(() => {
++                dispatch(resetSharedPPTStatus());
++                dispatch(participantLeft(conference));
++            });
++        }
++        break;
++    case SET_SHARED_PPT_STATUS:
++        if (localParticipantId === ownerId) {
++            sendShareVideoCommand({
++                conference,
++                localParticipantId,
++                muted,
++                status,
++                time,
++                id: videoUrl,
++                volume
++            });
++        }
++        break;
++    case RESET_SHARED_PPT_STATUS:
++        if (localParticipantId === stateOwnerId) {
++            sendShareVideoCommand({
++                conference,
++                id: statevideoUrl,
++                localParticipantId,
++                muted: true,
++                status: 'stop',
++                time: 0,
++                volume: 0
++            });
++        }
++        break;
++    }
++
++    return next(action);
++});
++
++/**
++ * Set up state change listener to perform maintenance tasks when the conference
++ * is left or failed, e.g. clear messages or close the chat modal if it's left
++ * open.
++ */
++StateListenerRegistry.register(
++    state => getCurrentConference(state),
++    (conference, store, previousConference) => {
++        if (conference && conference !== previousConference) {
++            conference.addCommandListener(SHARED_VIDEO,
++                ({ value, attributes }) => {
++
++                    const { dispatch, getState } = store;
++                    const { from } = attributes;
++                    const localParticipantId = getLocalParticipant(getState()).id;
++                    const status = attributes.state;
++
++                    if (isSharingStatus(status)) {
++                        handleSharingVideoStatus(store, value, attributes, conference);
++                    } else if (status === 'stop') {
++                        dispatch(participantLeft(value, conference));
++                        if (localParticipantId !== from) {
++                            dispatch(resetSharedVideoStatus());
++                        }
++                    }
++                }
++            );
++        }
++    }
++);
++
++/**
++ * Handles the playing, pause and start statuses for the shared video.
++ * Dispatches participantJoined event and, if necessary, pins it.
++ * Sets the SharedVideoStatus if the event was triggered by the local user.
++ *
++ * @param {Store} store - The redux store.
++ * @param {string} videoUrl - The id of the video to the shared.
++ * @param {Object} attributes - The attributes received from the share video command.
++ * @param {JitsiConference} conference - The current conference.
++ * @returns {void}
++ */
++function handleSharingVideoStatus(store, videoUrl, { state, time, from, muted }, conference) {
++    const { dispatch, getState } = store;
++    const localParticipantId = getLocalParticipant(getState()).id;
++    const oldStatus = getState()['features/shared-video']?.status;
++
++    if (state === 'start' || ![ 'playing', 'pause', 'start' ].includes(oldStatus)) {
++        const youtubeId = videoUrl.match(/http/) ? false : videoUrl;
++        const avatarURL = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/0.jpg` : '';
++
++        dispatch(participantJoined({
++            conference,
++            id: videoUrl,
++            isFakeParticipant: true,
++            avatarURL,
++            name: VIDEO_PLAYER_PARTICIPANT_NAME
++        }));
++
++        dispatch(pinParticipant(videoUrl));
++    }
++
++    if (localParticipantId !== from) {
++        dispatch(setSharedVideoStatus({
++            muted: muted === 'true',
++            ownerId: from,
++            status: state,
++            time: Number(time),
++            videoUrl
++        }));
++    }
++}
++
++/* eslint-disable max-params */
++
++/**
++ * Sends SHARED_VIDEO command.
++ *
++ * @param {string} id - The id of the video.
++ * @param {string} status - The status of the shared video.
++ * @param {JitsiConference} conference - The current conference.
++ * @param {string} localParticipantId - The id of the local participant.
++ * @param {string} time - The seek position of the video.
++ * @returns {void}
++ */
++function sendShareVideoCommand({ id, status, conference, localParticipantId, time, muted, volume }) {
++    conference.sendCommandOnce(SHARED_VIDEO, {
++        value: id,
++        attributes: {
++            from: localParticipantId,
++            muted,
++            state: status,
++            time,
++            volume
++        }
++    });
++}
+diff --git a/react/features/share-ppt/middleware.native.js b/react/features/share-ppt/middleware.native.js
+new file mode 100644
+index 000000000..fefd329e8
+--- /dev/null
++++ b/react/features/share-ppt/middleware.native.js
+@@ -0,0 +1 @@
++import './middleware.any';
+diff --git a/react/features/share-ppt/reducer.native.js b/react/features/share-ppt/reducer.native.js
+new file mode 100644
+index 000000000..3dfe9772a
+--- /dev/null
++++ b/react/features/share-ppt/reducer.native.js
+@@ -0,0 +1,28 @@
++// @flow
++
++import { ReducerRegistry } from '../base/redux';
++
++import { RESET_SHARED_PPT_STATUS, SET_SHARED_PPT_STATUS } from './actionTypes';
++
++const initialState = {};
++
++/**
++ * Reduces the Redux actions of the feature features/shared-ppt.
++ */
++ReducerRegistry.register('features/shared-ppt', (state = initialState, action) => {
++    const { status, time, ownerId } = action;
++
++    switch (action.type) {
++    case RESET_SHARED_PPT_STATUS:
++        return initialState;
++    case SET_SHARED_PPT_STATUS:
++        return {
++            ...state,
++            ownerId,
++            status,
++            time
++        };
++    default:
++        return state;
++    }
++});
+diff --git a/react/features/toolbox/components/native/OverflowMenu.js b/react/features/toolbox/components/native/OverflowMenu.js
+index af227487b..6fbf63451 100644
+--- a/react/features/toolbox/components/native/OverflowMenu.js
++++ b/react/features/toolbox/components/native/OverflowMenu.js
+@@ -23,6 +23,7 @@ import MuteEveryoneButton from '../MuteEveryoneButton';
+ import MuteEveryonesVideoButton from '../MuteEveryonesVideoButton';
+ 
+ import { UploadPresentationButton } from '../../../presentation/components'
++import { SharePresentationButton } from '../../../share-ppt/components'
+ 
+ import AudioOnlyButton from './AudioOnlyButton';
+ import MoreOptionsButton from './MoreOptionsButton';
+@@ -141,6 +142,7 @@ class OverflowMenu extends PureComponent<Props, State> {
+                 {!toolbarButtons.has('invite') && <InviteButton { ...buttonProps } />}
+                 <AudioOnlyButton { ...buttonProps } />
+                 <UploadPresentationButton { ...buttonProps }/>
++                <SharePresentationButton { ...buttonProps }/>
+                 {!toolbarButtons.has('raisehand') && <RaiseHandButton { ...buttonProps } />}
+                 <SecurityDialogButton { ...buttonProps } />
+                 <ScreenSharingButton { ...buttonProps } />
+-- 
+2.25.1
+
